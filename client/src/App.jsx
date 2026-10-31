@@ -56,8 +56,8 @@ function InteractiveHeroArt() {
   function handlePointerMove(event) {
     if (!dragging) return
     setOffset({
-      x: Math.max(-35, Math.min(35, event.clientX - start.current.x)),
-      y: Math.max(-25, Math.min(25, event.clientY - start.current.y)),
+      x: Math.max(-110, Math.min(55, event.clientX - start.current.x)),
+      y: Math.max(-35, Math.min(35, event.clientY - start.current.y)),
     })
   }
 
