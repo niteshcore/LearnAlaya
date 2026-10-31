@@ -220,9 +220,14 @@ function App() {
           <a href="#courses" onClick={() => setMenuOpen(false)}>Courses</a>
           <a href="#why-us" onClick={() => setMenuOpen(false)}>Why us</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
-          <Link className="nav-login" to="/login/student" onClick={() => setMenuOpen(false)}>
-            Student login <ArrowIcon />
-          </Link>
+          <div className="nav-portals">
+            <Link className="nav-login nav-login-student" to="/login/student" onClick={() => setMenuOpen(false)}>
+              Student login <ArrowIcon />
+            </Link>
+            <Link className="nav-login nav-login-teacher" to="/login/teacher" onClick={() => setMenuOpen(false)}>
+              Teacher login <ArrowIcon />
+            </Link>
+          </div>
         </nav>
       </header>
 
