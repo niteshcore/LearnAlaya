@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
 
@@ -40,6 +40,51 @@ const benefits = [
 
 function ArrowIcon() {
   return <span aria-hidden="true">↗</span>
+}
+
+function InteractiveHeroArt() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const start = useRef({ x: 0, y: 0 })
+
+  function handlePointerDown(event) {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    start.current = { x: event.clientX - offset.x, y: event.clientY - offset.y }
+    setDragging(true)
+  }
+
+  function handlePointerMove(event) {
+    if (!dragging) return
+    setOffset({
+      x: Math.max(-35, Math.min(35, event.clientX - start.current.x)),
+      y: Math.max(-25, Math.min(25, event.clientY - start.current.y)),
+    })
+  }
+
+  function handlePointerUp() {
+    setDragging(false)
+    setOffset({ x: 0, y: 0 })
+  }
+
+  return (
+    <div className="hero-art" aria-label="LearnAlaya learning illustration">
+      <div className="art-sun">✦</div>
+      <div className="art-card art-card-back"><span>learn</span><strong>with<br />purpose.</strong></div>
+      <div
+        className={`art-card art-card-front ${dragging ? 'is-dragging' : ''}`}
+        style={{ '--drag-x': `${offset.x}px`, '--drag-y': `${offset.y}px` }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <span className="card-kicker">Drag me</span>
+        <strong>bright<br /><mark>chapter.</mark></strong>
+        <div className="card-footer"><span>LA / 01</span><span>↗</span></div>
+      </div>
+      <span className="art-caption">CURIOUS<br />MINDS CLUB</span>
+    </div>
+  )
 }
 
 const portalConfig = {
@@ -198,16 +243,7 @@ function App() {
               <p><strong>Small batches.</strong><br />Big progress.</p>
             </div>
           </div>
-          <div className="hero-art" aria-label="LearnAlaya learning illustration">
-            <div className="art-sun">✦</div>
-            <div className="art-card art-card-back"><span>learn</span><strong>with<br />purpose.</strong></div>
-            <div className="art-card art-card-front">
-              <span className="card-kicker">Your next</span>
-              <strong>bright<br /><mark>chapter.</mark></strong>
-              <div className="card-footer"><span>LA / 01</span><span>↗</span></div>
-            </div>
-            <span className="art-caption">CURIOUS<br />MINDS CLUB</span>
-          </div>
+          <InteractiveHeroArt />
         </section>
 
         <div className="marquee" aria-label="LearnAlaya highlights">
@@ -221,7 +257,7 @@ function App() {
           </div>
           <div className="course-grid">
             {courses.map((course) => (
-              <article className={`course-card ${course.tone}`} key={course.title}>
+              <article className={`course-card ${course.tone}`} key={course.title} tabIndex="0">
                 <div className="course-top"><span className="course-status"><i /> {course.eyebrow}</span><span className="course-icon">{course.icon}</span></div>
                 <h3>{course.title}</h3>
                 <p>{course.description}</p>
