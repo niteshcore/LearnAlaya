@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
 
 const courses = [
@@ -41,11 +42,117 @@ function ArrowIcon() {
   return <span aria-hidden="true">↗</span>
 }
 
+const portalConfig = {
+  student: {
+    label: 'Student Portal',
+    role: 'Student',
+    tone: 'green',
+    title: 'Your learning, all in one place.',
+    description: 'Check your progress, find your notes and stay ready for what is next.',
+    stats: [['92%', 'Attendance'], ['86%', 'Average score'], ['04', 'Notes saved']],
+    sections: ['Overview', 'My timetable', 'Notes & resources', 'Class chat'],
+  },
+  teacher: {
+    label: 'Faculty Dashboard',
+    role: 'Teacher',
+    tone: 'red',
+    title: 'Make every lesson count.',
+    description: 'A focused workspace for attendance, marks, notes and your class timetable.',
+    stats: [['24', 'Students'], ['06', 'Notes uploaded'], ['03', 'Classes today']],
+    sections: ['Overview', 'Attendance', 'Publish results', 'Upload notes'],
+  },
+  admin: {
+    label: 'Administration Center',
+    role: 'Admin',
+    tone: 'yellow',
+    title: 'Keep the whole school moving.',
+    description: 'Manage users, review content and see what is happening across LearnAlaya.',
+    stats: [['128', 'Active users'], ['09', 'Classes'], ['24', 'Activity logs']],
+    sections: ['Overview', 'Manage users', 'Activity logs', 'Content review'],
+  },
+}
+
+function PortalLogin({ role }) {
+  const config = portalConfig[role]
+  const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
+  const [userId, setUserId] = useState('')
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    navigate(`/${role}`)
+  }
+
+  return (
+    <div className={`portal-page ${config.tone}`}>
+      <div className="portal-login-wrap">
+        <Link className="portal-back" to="/">← Back to LearnAlaya</Link>
+        <div className="portal-login-grid">
+          <div className="portal-intro">
+            <Link className="brand" to="/"><span className="brand-mark">L</span><span><strong>LearnAlaya</strong><small>Learn boldly. Grow steadily.</small></span></Link>
+            <div className="portal-card-illustration"><span className="portal-suit">A</span><strong>{config.role}<br />portal.</strong><i>✦</i></div>
+            <p className="portal-kicker">A calm place to<br />keep moving forward.</p>
+          </div>
+          <div className="login-card">
+            <div className="portal-badge">A <span>{config.role}</span></div>
+            <p className="section-label">Welcome back</p>
+            <h1>{config.title}</h1>
+            <p className="login-description">{config.description}</p>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="user-id">Username / ID</label>
+              <input id="user-id" value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={`Enter your ${role} ID`} required />
+              <label htmlFor="password">Password</label>
+              <input id="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" required />
+              <label className="checkbox-label"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show password</label>
+              <button className="button button-dark login-button" type="submit">Secure login <ArrowIcon /></button>
+            </form>
+            <p className="login-help">Lost your ID or password? <a href="mailto:hello@learnalaya.in">Contact admin</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PortalDashboard({ role }) {
+  const config = portalConfig[role]
+  const [activeSection, setActiveSection] = useState(config.sections[0])
+
+  return (
+    <div className={`dashboard-page ${config.tone}`}>
+      <header className="dashboard-header">
+        <Link className="brand" to="/"><span className="brand-mark">L</span><span><strong>LearnAlaya</strong><small>{config.label}</small></span></Link>
+        <div className="dashboard-user"><span className="user-avatar">{config.role[0]}</span><span><strong>{role === 'student' ? 'Welcome, Aarav' : `Welcome, ${config.role}`}</strong><small>{config.role} account</small></span><Link className="logout-link" to="/">Exit ↗</Link></div>
+      </header>
+      <main className="dashboard-layout">
+        <aside className="dashboard-sidebar">
+          <p className="section-label">Workspace</p>
+          <nav>{config.sections.map((section, index) => <button className={activeSection === section ? 'active' : ''} key={section} onClick={() => setActiveSection(section)}><span>0{index + 1}</span>{section}<b>↗</b></button>)}</nav>
+          <div className="sidebar-note"><span>✦</span><p>Keep showing up.<br /><strong>It adds up.</strong></p></div>
+        </aside>
+        <section className="dashboard-content">
+          <div className="dashboard-heading"><div><p className="section-label">Today / {activeSection}</p><h1>{config.title}</h1><p>{config.description}</p></div><div className="date-chip">OCT 31<br /><strong>2026</strong></div></div>
+          <div className="dashboard-stats">{config.stats.map(([value, label]) => <article key={label}><strong>{value}</strong><span>{label}</span></article>)}</div>
+          <div className="dashboard-panels"><article className="dashboard-panel panel-primary"><div className="panel-heading"><span>✦</span><p>Next up</p><b>View all ↗</b></div><h2>{role === 'student' ? 'Mathematics · Chapter 5' : role === 'teacher' ? 'Class 10 · Mathematics' : 'Platform overview'}</h2><p>{role === 'student' ? 'Algebra & equations · Today, 4:00 PM' : role === 'teacher' ? '24 students · Attendance pending' : 'Everything looks steady today.'}</p><div className="progress-line"><i /><span>{role === 'student' ? '75% completed' : 'Open workspace'}</span></div></article><article className="dashboard-panel panel-secondary"><div className="panel-heading"><span>◎</span><p>Quick action</p></div><h2>{role === 'student' ? 'Keep your streak going.' : role === 'teacher' ? 'Ready to mark attendance?' : 'Add a new user'}</h2><button className="button button-dark">Open {activeSection} <ArrowIcon /></button></article></div>
+          <div className="dashboard-table"><div className="panel-heading"><p>Recent activity</p><b>See all ↗</b></div>{['Concept building session', 'Weekly assessment', 'Chapter 5 notes'].map((item, index) => <div className="activity-row" key={item}><span className="activity-number">0{index + 1}</span><strong>{item}</strong><small>{index === 0 ? 'Today, 10:30 AM' : 'Yesterday'}</small><span className="activity-status">Done</span></div>)}</div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="site-shell">
+    <Routes>
+      <Route path="/login/student" element={<PortalLogin role="student" />} />
+      <Route path="/login/teacher" element={<PortalLogin role="teacher" />} />
+      <Route path="/admin-login" element={<PortalLogin role="admin" />} />
+      <Route path="/student" element={<PortalDashboard role="student" />} />
+      <Route path="/teacher" element={<PortalDashboard role="teacher" />} />
+      <Route path="/admin" element={<PortalDashboard role="admin" />} />
+      <Route path="*" element={<div className="site-shell">
       <header className="navbar">
         <a className="brand" href="#top" aria-label="LearnAlaya home">
           <span className="brand-mark">L</span>
@@ -68,9 +175,9 @@ function App() {
           <a href="#courses" onClick={() => setMenuOpen(false)}>Courses</a>
           <a href="#why-us" onClick={() => setMenuOpen(false)}>Why us</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
-          <a className="nav-login" href="#login" onClick={() => setMenuOpen(false)}>
+          <Link className="nav-login" to="/login/student" onClick={() => setMenuOpen(false)}>
             Student login <ArrowIcon />
-          </a>
+          </Link>
         </nav>
       </header>
 
@@ -142,9 +249,10 @@ function App() {
       </main>
 
       <footer className="footer" id="login">
-        <div className="section-wrap footer-grid"><div><a className="brand footer-brand" href="#top"><span className="brand-mark">L</span><span><strong>LearnAlaya</strong><small>Learn boldly. Grow steadily.</small></span></a><p className="footer-note">A thoughtful learning space<br />for curious minds.</p></div><div><p className="footer-label">Explore</p><a href="#courses">Courses</a><a href="#why-us">Why LearnAlaya</a><a href="#about">About us</a></div><div><p className="footer-label">Portals</p><a href="#login">Student login ↗</a><a href="#login">Teacher login ↗</a><a href="#login">Admin access ↗</a></div><div><p className="footer-label">Have a question?</p><a href="mailto:hello@learnalaya.in">hello@learnalaya.in</a><p className="footer-small">Contact details will be updated<br />once admissions open.</p></div></div><div className="section-wrap footer-bottom"><span>© 2026 LearnAlaya</span><span>Built for better beginnings <span className="heart">♥</span></span></div>
+        <div className="section-wrap footer-grid"><div><a className="brand footer-brand" href="#top"><span className="brand-mark">L</span><span><strong>LearnAlaya</strong><small>Learn boldly. Grow steadily.</small></span></a><p className="footer-note">A thoughtful learning space<br />for curious minds.</p></div><div><p className="footer-label">Explore</p><a href="#courses">Courses</a><a href="#why-us">Why LearnAlaya</a><a href="#about">About us</a></div><div><p className="footer-label">Portals</p><Link to="/login/student">Student login ↗</Link><Link to="/login/teacher">Teacher login ↗</Link><Link to="/admin-login">Admin access ↗</Link></div><div><p className="footer-label">Have a question?</p><a href="mailto:hello@learnalaya.in">hello@learnalaya.in</a><p className="footer-small">Contact details will be updated<br />once admissions open.</p></div></div><div className="section-wrap footer-bottom"><span>© 2026 LearnAlaya</span><span>Built for better beginnings <span className="heart">♥</span></span></div>
       </footer>
-    </div>
+    </div>} />
+    </Routes>
   )
 }
 
