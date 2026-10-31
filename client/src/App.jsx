@@ -188,6 +188,7 @@ function PortalDashboard({ role }) {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [portalOpen, setPortalOpen] = useState(false)
 
   return (
     <Routes>
@@ -221,12 +222,28 @@ function App() {
           <a href="#why-us" onClick={() => setMenuOpen(false)}>Why us</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
           <div className="nav-portals">
-            <Link className="nav-login nav-login-student" to="/login/student" onClick={() => setMenuOpen(false)}>
-              Student login <ArrowIcon />
-            </Link>
-            <Link className="nav-login nav-login-teacher" to="/login/teacher" onClick={() => setMenuOpen(false)}>
-              Teacher login <ArrowIcon />
-            </Link>
+            <button
+              className="nav-login portal-trigger"
+              type="button"
+              aria-expanded={portalOpen}
+              onClick={() => setPortalOpen(!portalOpen)}
+            >
+              LOGIN <span className={portalOpen ? 'chevron is-open' : 'chevron'}>⌄</span>
+            </button>
+            {portalOpen && (
+              <div className="portal-menu">
+                <Link to="/login/student" onClick={() => { setMenuOpen(false); setPortalOpen(false) }}>
+                  <span className="portal-menu-icon green-icon">♣</span>
+                  <span><strong>Student</strong><small>Student portal</small></span>
+                  <ArrowIcon />
+                </Link>
+                <Link to="/login/teacher" onClick={() => { setMenuOpen(false); setPortalOpen(false) }}>
+                  <span className="portal-menu-icon red-icon">♥</span>
+                  <span><strong>Teacher</strong><small>Faculty dashboard</small></span>
+                  <ArrowIcon />
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       </header>
