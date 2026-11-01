@@ -62,12 +62,12 @@ export default function AddUserForm({ directory, onCreated, onClose, onShowingCr
 
     const phone = normalisePhone(form.phone)
     const parentPhone = normalisePhone(form.newParent.phone)
-    if (role !== 'student' && phone.error) { setError(phone.error); return }
+    if (role !== 'student' && !phone.phone) { setError(phone.error ?? `Enter the ${role}’s phone number.`); return }
     if (role === 'student') {
       if (!form.classId) { setError('Choose a class for the student.'); return }
       if (form.parentMode === 'existing' && !form.existingParentId) { setError('Choose the parent to link, or pick “No parent for now”.'); return }
       if (form.parentMode === 'new' && !form.newParent.fullName.trim()) { setError('Enter the new parent’s full name.'); return }
-      if (form.parentMode === 'new' && parentPhone.error) { setError(`Parent phone: ${parentPhone.error}`); return }
+      if (form.parentMode === 'new' && !parentPhone.phone) { setError(parentPhone.error ? `Parent phone: ${parentPhone.error}` : 'Enter the parent’s phone number.'); return }
     }
 
     setBusy(true)
@@ -141,7 +141,7 @@ export default function AddUserForm({ directory, onCreated, onClose, onShowingCr
       <label className="admin-field"><span>Full name</span><input value={form.fullName} onChange={set('fullName')} autoComplete="off" maxLength={80} required /></label>
 
       {role !== 'student' && (
-        <label className="admin-field"><span>Phone</span><input type="tel" inputMode="tel" value={form.phone} onChange={set('phone')} placeholder="98765 43210" autoComplete="off" /></label>
+        <label className="admin-field"><span>Phone</span><input type="tel" inputMode="tel" value={form.phone} onChange={set('phone')} placeholder="98765 43210" autoComplete="off" required /></label>
       )}
       {role === 'parent' && (
         <label className="admin-check"><input type="checkbox" checked={form.whatsapp} onChange={set('whatsapp')} /> Send fee reminders and updates on WhatsApp</label>
@@ -196,7 +196,7 @@ export default function AddUserForm({ directory, onCreated, onClose, onShowingCr
                   <label className="admin-field admin-grow"><span>Parent’s full name</span><input value={form.newParent.fullName} onChange={setNewParent('fullName')} maxLength={80} /></label>
                   <RelationSelect id="relation-new" value={form.relation} onChange={(relation) => setForm({ ...form, relation })} />
                 </div>
-                <label className="admin-field"><span>Parent’s phone</span><input type="tel" inputMode="tel" value={form.newParent.phone} onChange={setNewParent('phone')} placeholder="98765 43210" /></label>
+                <label className="admin-field"><span>Parent’s phone</span><input type="tel" inputMode="tel" value={form.newParent.phone} onChange={setNewParent('phone')} placeholder="98765 43210" required /></label>
                 <label className="admin-check"><input type="checkbox" checked={form.newParent.whatsapp} onChange={setNewParent('whatsapp')} /> WhatsApp updates for this parent</label>
               </>
             )}

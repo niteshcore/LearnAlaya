@@ -4,7 +4,7 @@
 //   role        'admin' | 'teacher' | 'student' | 'parent'           (required)
 //   full_name   string                                               (required)
 //   login_id    string, optional — generated (e.g. STU04821) when left out
-//   private     { phone?, whatsapp_opt_in?, address?, date_of_birth? }  optional
+//   private     { phone?, whatsapp_opt_in?, address?, date_of_birth? }  phone (+91…) required for teacher / parent
 //   student     { class_id, roll_no?, enrolled_on?, subject_ids? }   required when role = 'student'
 //               subject_ids = class_subjects ids of that class the student takes
 //   children    [{ student_id, relation? }]                          optional, role = 'parent' only
@@ -33,6 +33,23 @@ function optionalText(value: unknown, field: string) {
   return value.trim() || null
 }
 
+function limitedText(value: unknown, field: string, max: number) {
+  const text = optionalText(value, field)
+  if (text && text.length > max) throw new HttpError(400, `${field} can be at most ${max} characters.`)
+  return text
+}
+
+// Same E.164 shape the app stores (see normalisePhone in client/src/lib/format.js).
+function optionalPhone(value: unknown, field: string) {
+  const text = optionalText(value, field)
+  if (text && !/^\+[0-9]{8,15}$/.test(text)) throw new HttpError(400, `${field} must be a full number like +919876543210.`)
+  return text
+}
+
+const RELATIONS = ['mother', 'father', 'guardian']
+// Parents and teachers have to be reachable.
+const NEEDS_PHONE: Role[] = ['parent', 'teacher']
+
 function optionalDate(value: unknown, field: string) {
   const text = optionalText(value, field)
   if (text && !/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new HttpError(400, `${field} must look like YYYY-MM-DD.`)
@@ -53,18 +70,19 @@ function plainObject(value: unknown, field: string): Row | null {
 function buildRows(body: Row, role: Role) {
   const privateInput = plainObject(body.private, 'private')
   const privateRow = privateInput && {
-    phone: optionalText(privateInput.phone, 'private.phone'),
+    phone: optionalPhone(privateInput.phone, 'private.phone'),
     whatsapp_opt_in: privateInput.whatsapp_opt_in === true,
-    address: optionalText(privateInput.address, 'private.address'),
+    address: limitedText(privateInput.address, 'private.address', 300),
     date_of_birth: optionalDate(privateInput.date_of_birth, 'private.date_of_birth'),
   }
+  if (NEEDS_PHONE.includes(role) && !privateRow?.phone) throw new HttpError(400, `A phone number is required for a ${role}.`)
 
   const studentInput = plainObject(body.student, 'student')
   if (role === 'student' && !studentInput) throw new HttpError(400, 'student.class_id is required for a student.')
   if (role !== 'student' && studentInput) throw new HttpError(400, 'student details only apply to role "student".')
   const studentRow = studentInput && {
     class_id: requiredUuid(studentInput.class_id, 'student.class_id'),
-    roll_no: optionalText(studentInput.roll_no, 'student.roll_no'),
+    roll_no: limitedText(studentInput.roll_no, 'student.roll_no', 20),
     ...(studentInput.enrolled_on ? { enrolled_on: optionalDate(studentInput.enrolled_on, 'student.enrolled_on') } : {}),
   }
   if (studentInput?.subject_ids !== undefined && !Array.isArray(studentInput.subject_ids)) throw new HttpError(400, 'student.subject_ids must be a list.')
@@ -74,9 +92,11 @@ function buildRows(body: Row, role: Role) {
   if (body.children !== undefined && !Array.isArray(body.children)) throw new HttpError(400, 'children must be a list.')
   const childRows = ((body.children as unknown[] | undefined) ?? []).map((child, index) => {
     const item = plainObject(child, `children[${index}]`) ?? {}
+    const relation = optionalText(item.relation, `children[${index}].relation`)
+    if (relation && !RELATIONS.includes(relation)) throw new HttpError(400, `children[${index}].relation must be one of: ${RELATIONS.join(', ')}.`)
     return {
       student_id: requiredUuid(item.student_id, `children[${index}].student_id`),
-      relation: optionalText(item.relation, `children[${index}].relation`),
+      relation,
     }
   })
 
@@ -95,7 +115,7 @@ Deno.serve(handle(async (req) => {
 
   const role = body.role as Role
   if (!ROLES.includes(role)) throw new HttpError(400, `role must be one of: ${ROLES.join(', ')}.`)
-  const fullName = optionalText(body.full_name, 'full_name')
+  const fullName = limitedText(body.full_name, 'full_name', 80)
   if (!fullName) throw new HttpError(400, 'full_name is required.')
   const { privateRow, studentRow, subjectIds, childRows } = buildRows(body, role)
 

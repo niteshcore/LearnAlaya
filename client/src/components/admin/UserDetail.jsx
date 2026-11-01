@@ -13,6 +13,7 @@ function DetailsForm({ user, onChanged }) {
   const [form, setForm] = useState({ fullName: user.full_name, phone: user.phone ?? '', whatsapp: user.whatsapp_opt_in })
   const [saved, setSaved] = useState(false)
   const action = useAction()
+  const needsPhone = user.role === 'parent' || user.role === 'teacher'
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -21,6 +22,7 @@ function DetailsForm({ user, onChanged }) {
     const phone = normalisePhone(form.phone)
     if (!fullName) { action.setError('Enter the full name.'); return }
     if (phone.error) { action.setError(phone.error); return }
+    if (needsPhone && !phone.phone) { action.setError(`A ${user.role} needs a phone number.`); return }
     if (await action.run(() => updateUserDetails(user, { full_name: fullName, phone: phone.phone, whatsapp_opt_in: form.whatsapp }))) {
       setSaved(true)
       onChanged()
@@ -30,7 +32,7 @@ function DetailsForm({ user, onChanged }) {
   return (
     <form className="admin-form" onSubmit={handleSubmit}>
       <label className="admin-field"><span>Full name</span><input value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} maxLength={80} /></label>
-      <label className="admin-field"><span>Phone</span><input type="tel" inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder="98765 43210" /></label>
+      <label className="admin-field"><span>Phone</span><input type="tel" inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder="98765 43210" required={needsPhone} /></label>
       {user.role === 'parent' && (
         <label className="admin-check"><input type="checkbox" checked={form.whatsapp} onChange={(event) => setForm({ ...form, whatsapp: event.target.checked })} /> WhatsApp updates</label>
       )}

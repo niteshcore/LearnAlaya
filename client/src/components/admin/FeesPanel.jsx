@@ -17,6 +17,9 @@ const MODES = ['Cash', 'UPI', 'Bank transfer', 'Cheque']
 const matchesFilter = (fee, filter) => filter === 'all' || (filter === 'open' ? isOpen(fee) : filter === 'paid' ? fee.state === 'paid' || fee.state === 'waived' : fee.state === filter)
 const studentLine = (student) => student ? `${student.login_id}${student.class_label ? ` · ${student.class_label}` : ''}` : 'Removed student'
 
+// Same cap as the fee_amount_limit check in 0005_security.sql.
+const MAX_FEE = 10000000
+
 function parseAmount(text) {
   const value = Number(String(text).replace(/[,₹\s]/g, ''))
   return Number.isFinite(value) && value > 0 ? Math.round(value * 100) / 100 : null
@@ -35,6 +38,7 @@ function AddFeeForm({ students, classes, today, onDone, onClose }) {
     const title = form.title.trim()
     if (!title) return setError('Name the fee, e.g. November tuition.')
     if (!amount) return setError('Enter an amount above zero.')
+    if (amount > MAX_FEE) return setError(`That looks too big. A fee can be at most ${formatMoney(MAX_FEE)}.`)
     if (!form.dueDate) return setError('Pick a due date.')
     if (!chosen.length) return setError(form.target === 'class' ? 'This class has no active students.' : 'Choose a student.')
     const forLabel = form.target === 'class' ? classLabel(classes.find((c) => c.id === form.classId)) : chosen[0].full_name
