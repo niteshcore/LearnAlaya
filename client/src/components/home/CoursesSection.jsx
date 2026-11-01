@@ -15,7 +15,7 @@ export default function CoursesSection() {
       <div className="course-grid">
         {courses.map((course) => <CourseCard course={course} key={course.title} />)}
       </div>
-      <div className="soon-card">
+      <div className="soon-card reveal">
         <span className="soon-stamp">SOON</span>
         <div><p className="section-label">02 / On the horizon</p><h3>New batches are taking shape.</h3></div>
         <p>Be the first to know when our next learning track opens.</p>

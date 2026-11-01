@@ -14,7 +14,7 @@ export default function WhySection() {
         />
         <div className="benefit-grid">
           {benefits.map(([number, title, copy]) => (
-            <article className="benefit" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>
+            <article className="benefit reveal" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></article>
           ))}
         </div>
       </div>

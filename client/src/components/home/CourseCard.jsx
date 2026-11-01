@@ -2,7 +2,7 @@ import ArrowIcon from '../ui/ArrowIcon.jsx'
 
 export default function CourseCard({ course }) {
   return (
-    <article className={`course-card ${course.tone}`} tabIndex="0">
+    <article className={`course-card reveal ${course.tone}`} tabIndex="0">
       <div className="course-top"><span className="course-status"><i /> {course.eyebrow}</span><span className="course-icon">{course.icon}</span></div>
       <h3>{course.title}</h3>
       <p>{course.description}</p>

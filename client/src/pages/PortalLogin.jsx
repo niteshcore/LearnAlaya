@@ -34,9 +34,9 @@ export default function PortalLogin({ role }) {
             <p className="login-description">{config.description}</p>
             <form onSubmit={handleSubmit}>
               <label htmlFor="user-id">Username / ID</label>
-              <input id="user-id" value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={`Enter your ${role} ID`} required />
+              <input id="user-id" value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={`Enter your ${role} ID`} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
               <label htmlFor="password">Password</label>
-              <input id="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" required />
+              <input id="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" required />
               <label className="checkbox-label"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show password</label>
               <Button type="submit" className="login-button">Secure login</Button>
             </form>
