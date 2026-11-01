@@ -1,3 +1,12 @@
+export const portalRoles = ['student', 'teacher', 'parent', 'admin']
+
+export const loginPaths = {
+  student: '/login/student',
+  teacher: '/login/teacher',
+  parent: '/login/parent',
+  admin: '/admin-login',
+}
+
 export const portalConfig = {
   student: {
     label: 'Student Portal',
@@ -7,7 +16,6 @@ export const portalConfig = {
     description: 'Check your progress, find your notes and stay ready for what is next.',
     stats: [['92%', 'Attendance'], ['86%', 'Average score'], ['04', 'Notes saved']],
     sections: ['Overview', 'My timetable', 'Notes & resources', 'Class chat'],
-    greeting: 'Welcome, Aarav',
     nextUp: { title: 'Mathematics · Chapter 5', detail: 'Algebra & equations · Today, 4:00 PM', progress: '75% completed' },
     quickAction: 'Keep your streak going.',
   },
@@ -19,9 +27,19 @@ export const portalConfig = {
     description: 'A focused workspace for attendance, marks, notes and your class timetable.',
     stats: [['24', 'Students'], ['06', 'Notes uploaded'], ['03', 'Classes today']],
     sections: ['Overview', 'Attendance', 'Publish results', 'Upload notes'],
-    greeting: 'Welcome, Teacher',
     nextUp: { title: 'Class 10 · Mathematics', detail: '24 students · Attendance pending', progress: 'Open workspace' },
     quickAction: 'Ready to mark attendance?',
+  },
+  parent: {
+    label: 'Parent Portal',
+    role: 'Parent',
+    tone: 'green',
+    title: 'Stay close to their progress.',
+    description: 'Follow attendance, results, fees and class updates for your child in one calm place.',
+    stats: [['94%', 'Attendance'], ['82%', 'Last test'], ['00', 'Fees due']],
+    sections: ['Overview', 'Attendance', 'Results', 'Fees & payments'],
+    nextUp: { title: 'Science · Unit test 2', detail: 'Friday, 10:00 AM · Syllabus shared', progress: '80% syllabus covered' },
+    quickAction: 'Message the class teacher',
   },
   admin: {
     label: 'Administration Center',
@@ -31,7 +49,6 @@ export const portalConfig = {
     description: 'Manage users, review content and see what is happening across LearnAlaya.',
     stats: [['128', 'Active users'], ['09', 'Classes'], ['24', 'Activity logs']],
     sections: ['Overview', 'Manage users', 'Activity logs', 'Content review'],
-    greeting: 'Welcome, Admin',
     nextUp: { title: 'Platform overview', detail: 'Everything looks steady today.', progress: 'Open workspace' },
     quickAction: 'Add a new user',
   },

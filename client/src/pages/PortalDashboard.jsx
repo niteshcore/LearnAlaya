@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/authContext.js'
 import Brand from '../components/ui/Brand.jsx'
 import Button from '../components/ui/Button.jsx'
 import { portalConfig } from '../data/portalConfig.js'
@@ -19,15 +20,22 @@ function DateChip() {
 export default function PortalDashboard({ role }) {
   const config = portalConfig[role]
   const [activeSection, setActiveSection] = useState(config.sections[0])
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  async function handleExit() {
+    navigate('/', { replace: true })
+    await signOut()
+  }
 
   return (
     <div className={`dashboard-page ${config.tone}`}>
       <header className="dashboard-header">
         <Brand to="/" tagline={config.label} />
         <div className="dashboard-user">
-          <span className="user-avatar">{config.role[0]}</span>
-          <span><strong>{config.greeting}</strong><small>{config.role} account</small></span>
-          <Link className="logout-link" to="/">Exit ↗</Link>
+          <span className="user-avatar" aria-hidden="true">{user.full_name.trim()[0]?.toUpperCase() ?? config.role[0]}</span>
+          <span><strong>Welcome, {user.full_name}</strong><small>{config.role} account · {user.login_id}</small></span>
+          <button className="logout-link" type="button" onClick={handleExit}>Exit ↗</button>
         </div>
       </header>
       <main className="dashboard-layout">

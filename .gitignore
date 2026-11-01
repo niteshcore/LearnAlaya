@@ -1,1 +1,8 @@
 AGENT_HANDOFF.md
+
+# Environment files and Supabase CLI state
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/

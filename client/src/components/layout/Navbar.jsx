@@ -6,6 +6,7 @@ import Brand from '../ui/Brand.jsx'
 const portalLinks = [
   { to: '/login/student', label: 'Student', hint: 'Student portal', suit: '♣', iconClass: 'green-icon' },
   { to: '/login/teacher', label: 'Teacher', hint: 'Faculty dashboard', suit: '♥', iconClass: 'red-icon' },
+  { to: '/login/parent', label: 'Parent', hint: 'Parent portal', suit: '♦', iconClass: 'yellow-icon' },
 ]
 
 export default function Navbar() {

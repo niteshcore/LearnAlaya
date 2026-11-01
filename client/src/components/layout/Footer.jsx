@@ -20,6 +20,7 @@ export default function Footer() {
           <p className="footer-label">Portals</p>
           <Link to="/login/student">Student login ↗</Link>
           <Link to="/login/teacher">Teacher login ↗</Link>
+          <Link to="/login/parent">Parent login ↗</Link>
         </div>
         <div>
           <p className="footer-label">Have a question?</p>
