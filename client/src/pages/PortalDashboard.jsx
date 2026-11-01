@@ -6,6 +6,16 @@ import { portalConfig } from '../data/portalConfig.js'
 
 const recentActivity = ['Concept building session', 'Weekly assessment', 'Chapter 5 notes']
 
+function DateChip() {
+  const [today] = useState(() => new Date())
+  const monthDay = today.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }).toUpperCase()
+  return (
+    <time className="date-chip" dateTime={today.toLocaleDateString('en-CA')}>
+      {monthDay}<br /><strong>{today.getFullYear()}</strong>
+    </time>
+  )
+}
+
 export default function PortalDashboard({ role }) {
   const config = portalConfig[role]
   const [activeSection, setActiveSection] = useState(config.sections[0])
@@ -35,7 +45,7 @@ export default function PortalDashboard({ role }) {
         <section className="dashboard-content">
           <div className="dashboard-heading">
             <div><p className="section-label">Today / {activeSection}</p><h1>{config.title}</h1><p>{config.description}</p></div>
-            <div className="date-chip">OCT 31<br /><strong>2026</strong></div>
+            <DateChip />
           </div>
           <div className="dashboard-stats">
             {config.stats.map(([value, label]) => <article key={label}><strong>{value}</strong><span>{label}</span></article>)}
