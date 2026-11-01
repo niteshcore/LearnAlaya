@@ -46,10 +46,7 @@ export const portalConfig = {
     role: 'Admin',
     tone: 'yellow',
     title: 'Keep the whole school moving.',
-    description: 'Manage users, review content and see what is happening across LearnAlaya.',
-    stats: [['128', 'Active users'], ['09', 'Classes'], ['24', 'Activity logs']],
-    sections: ['Overview', 'Manage users', 'Activity logs', 'Content review'],
-    nextUp: { title: 'Platform overview', detail: 'Everything looks steady today.', progress: 'Open workspace' },
-    quickAction: 'Add a new user',
+    description: 'Set up classes, add people and see what is happening across LearnAlaya.',
+    sections: ['Overview', 'Users', 'Classes & subjects', 'Activity log'],
   },
 }

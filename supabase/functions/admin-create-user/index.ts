@@ -5,7 +5,8 @@
 //   full_name   string                                               (required)
 //   login_id    string, optional — generated (e.g. STU04821) when left out
 //   private     { phone?, whatsapp_opt_in?, address?, date_of_birth? }  optional
-//   student     { class_id, roll_no?, enrolled_on? }                 required when role = 'student'
+//   student     { class_id, roll_no?, enrolled_on?, subject_ids? }   required when role = 'student'
+//               subject_ids = class_subjects ids of that class the student takes
 //   children    [{ student_id, relation? }]                          optional, role = 'parent' only
 //
 // Returns { user_id, login_id, role, temporary_password }.
@@ -66,6 +67,8 @@ function buildRows(body: Row, role: Role) {
     roll_no: optionalText(studentInput.roll_no, 'student.roll_no'),
     ...(studentInput.enrolled_on ? { enrolled_on: optionalDate(studentInput.enrolled_on, 'student.enrolled_on') } : {}),
   }
+  if (studentInput?.subject_ids !== undefined && !Array.isArray(studentInput.subject_ids)) throw new HttpError(400, 'student.subject_ids must be a list.')
+  const subjectIds = [...new Set(((studentInput?.subject_ids as unknown[] | undefined) ?? []).map((id, index) => requiredUuid(id, `student.subject_ids[${index}]`)))]
 
   if (body.children !== undefined && role !== 'parent') throw new HttpError(400, 'children only apply to role "parent".')
   if (body.children !== undefined && !Array.isArray(body.children)) throw new HttpError(400, 'children must be a list.')
@@ -77,7 +80,7 @@ function buildRows(body: Row, role: Role) {
     }
   })
 
-  return { privateRow, studentRow, childRows }
+  return { privateRow, studentRow, subjectIds, childRows }
 }
 
 function insertError(error: { code?: string; message: string }, what: string) {
@@ -94,7 +97,13 @@ Deno.serve(handle(async (req) => {
   if (!ROLES.includes(role)) throw new HttpError(400, `role must be one of: ${ROLES.join(', ')}.`)
   const fullName = optionalText(body.full_name, 'full_name')
   if (!fullName) throw new HttpError(400, 'full_name is required.')
-  const { privateRow, studentRow, childRows } = buildRows(body, role)
+  const { privateRow, studentRow, subjectIds, childRows } = buildRows(body, role)
+
+  if (studentRow && subjectIds.length) {
+    const { data: offered, error } = await admin.from('class_subjects').select('id').eq('class_id', studentRow.class_id).in('id', subjectIds)
+    if (error) throw error
+    if (offered.length !== subjectIds.length) throw new HttpError(400, 'Some chosen subjects are not taught in that class.')
+  }
 
   let loginId: string
   if (body.login_id === undefined || body.login_id === '') {
@@ -128,6 +137,9 @@ Deno.serve(handle(async (req) => {
     ]
     if (privateRow) steps.push(['private details', () => admin.from('profile_private').insert({ profile_id: userId, ...privateRow })])
     if (studentRow) steps.push(['student record', () => admin.from('students').insert({ profile_id: userId, ...studentRow })])
+    if (subjectIds.length) {
+      steps.push(['subjects', () => admin.from('student_subjects').insert(subjectIds.map((id) => ({ student_id: userId, class_subject_id: id })))])
+    }
     if (childRows.length) {
       steps.push(['parent links', () => admin.from('parent_students').insert(childRows.map((child) => ({ parent_id: userId, ...child })))])
     }
@@ -142,7 +154,7 @@ Deno.serve(handle(async (req) => {
     throw error
   }
 
-  await logActivity(admin, adminId, 'user.created', userId, { login_id: loginId, role })
+  await logActivity(admin, adminId, 'user.created', userId, { login_id: loginId, role, full_name: fullName })
 
   return json({ user_id: userId, login_id: loginId, role, temporary_password: temporaryPassword }, 201)
 }))

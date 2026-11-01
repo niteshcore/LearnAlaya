@@ -11,7 +11,7 @@ Deno.serve(handle(async (req) => {
   const { adminId, admin } = await requireAdmin(req)
   const body = await readBody(req)
 
-  let query = admin.from('profiles').select('id, login_id, role')
+  let query = admin.from('profiles').select('id, login_id, role, full_name')
   if (typeof body.user_id === 'string' && body.user_id) query = query.eq('id', body.user_id)
   // ilike so a hand-inserted lower-case login_id still matches; `_` is the only LIKE wildcard the ID format allows
   else if (body.login_id) query = query.ilike('login_id', normaliseLoginId(body.login_id).replace(/_/g, '\\_'))
@@ -31,7 +31,7 @@ Deno.serve(handle(async (req) => {
   const { error: updateError } = await admin.auth.admin.updateUserById(target.id, { password: temporaryPassword })
   if (updateError) throw updateError
 
-  await logActivity(admin, adminId, 'user.password_reset', target.id, { login_id: target.login_id })
+  await logActivity(admin, adminId, 'user.password_reset', target.id, { login_id: target.login_id, full_name: target.full_name })
 
   return json({ user_id: target.id, login_id: target.login_id, temporary_password: temporaryPassword })
 }))
