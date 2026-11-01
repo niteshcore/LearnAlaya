@@ -60,12 +60,13 @@
 .admin-form { display: grid; gap: 14px; }
 .admin-field { display: grid; gap: 6px; min-width: 0; }
 .admin-field > span { font: 11px var(--mono); text-transform: uppercase; color: #3e4a45; }
-.admin-field input, .admin-field select {
+.admin-field input, .admin-field select, .admin-field textarea {
   width: 100%; min-height: 44px; padding: 10px 12px;
   border: 1.5px solid var(--ink); border-radius: 3px; background: #fff; color: var(--ink);
   font: 15px var(--display);
 }
-.admin-field input:focus-visible, .admin-field select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
+.admin-field input:focus-visible, .admin-field select:focus-visible, .admin-field textarea:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
+.admin-field textarea { resize: vertical; line-height: 1.5; min-height: 110px; }
 .admin-field input[type=color] { padding: 4px; width: 64px; }
 .admin-check { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 14px; cursor: pointer; }
 .admin-check input { width: 20px; height: 20px; accent-color: var(--ink); flex: none; }
@@ -134,6 +135,17 @@
 .admin-subhead { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
 .admin-status-line { font-size: 14px; }
 
+/* ---------- Status chips (shared by admin, teacher and parent screens) ---------- */
+.register-chip { flex: none; padding: 4px 8px; border: 1px solid var(--ink); font: 10px var(--mono); text-transform: uppercase; background: var(--cream); }
+.register-chip.register-done { background: var(--green); }
+.register-chip.register-partial { background: var(--yellow); }
+.register-chip.register-pending { background: #fbe0d8; }
+.register-chip.register-muted { color: #657069; border-color: var(--line); }
+.activity-status.register-pending { color: #a3321c; }
+.activity-status.register-partial { color: #8a6a00; }
+.activity-status.register-muted { color: #657069; }
+.register-chip.register-plain { background: #fff; }
+
 /* ---------- Timetable ---------- */
 .tt-grid { display: grid; grid-template-columns: repeat(var(--tt-days, 6), minmax(0, 1fr)); border: 1.5px solid var(--ink); background: #fffdf8; }
 .tt-day { display: grid; align-content: start; gap: 8px; padding: 10px 8px 12px; border-right: 1px solid var(--line); min-width: 0; }
@@ -154,6 +166,22 @@
 .day-picker button.is-active { background: var(--ink); color: var(--cream); }
 .day-picker button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 .admin-notice code { font: 12px var(--mono); }
+
+/* ---------- Fees ---------- */
+.dashboard-stats.fee-stats { margin-top: 0; }
+.dashboard-stats.fee-stats strong { font-size: clamp(24px, 3vw, 34px); letter-spacing: -.05em; }
+.admin-segmented.fee-target { grid-template-columns: repeat(2, 1fr); }
+.fee-amounts { display: grid; justify-items: end; gap: 2px; flex: none; min-width: 90px; }
+.fee-amounts strong { font: 600 16px var(--display); }
+.fee-amounts small { font: 10px var(--mono); color: #657069; min-height: 12px; }
+.fee-list .register-chip { min-width: 72px; text-align: center; }
+.fee-summary { display: grid; gap: 10px; }
+.fee-summary dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fee-summary dl div { padding: 10px; border: 1px solid var(--ink); background: #fff; }
+.fee-summary dt { font: 10px var(--mono); text-transform: uppercase; color: #657069; }
+.fee-summary dd { margin-top: 4px; font: 600 16px var(--display); }
+.fee-payment-form { padding-top: 14px; border-top: 1px solid var(--line); }
+.fee-history { display: grid; gap: 8px; }
 
 /* ---------- Credentials ---------- */
 .credential-card { display: grid; gap: 12px; padding: 18px; border: 2px solid var(--ink); background: var(--yellow); box-shadow: 5px 5px 0 var(--ink); }
@@ -201,6 +229,11 @@
   .admin-modal { width: 100%; max-height: none; height: 100%; height: 100dvh; box-shadow: none; border: 0; }
   .admin-modal-body { padding: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   .credential-card code { font-size: 16px; }
+  .dashboard-stats.fee-stats { grid-template-columns: 1fr; }
+  .fee-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fee-list .user-main { flex-basis: 100%; }
+  .fee-list .fee-amounts { justify-items: start; }
+  .user-list.fee-list li .admin-btn { margin-left: auto; }
   .user-list li { flex-wrap: wrap; }
   .user-list li .admin-btn { margin-left: 50px; }
   .user-list li .admin-badge { margin-left: 0; }

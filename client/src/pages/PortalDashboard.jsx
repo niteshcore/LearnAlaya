@@ -2,12 +2,15 @@ import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
 import Brand from '../components/ui/Brand.jsx'
+import NotificationBell from '../components/portal/NotificationBell.jsx'
 import Button from '../components/ui/Button.jsx'
 import { portalConfig } from '../data/portalConfig.js'
 
 const AdminWorkspace = lazy(() => import('../components/admin/AdminWorkspace.jsx'))
 const TeacherWorkspace = lazy(() => import('../components/teacher/TeacherWorkspace.jsx'))
-const workspaces = { admin: AdminWorkspace, teacher: TeacherWorkspace }
+const ParentWorkspace = lazy(() => import('../components/parent/ParentWorkspace.jsx'))
+const AnnouncementsFeed = lazy(() => import('../components/portal/AnnouncementsFeed.jsx'))
+const workspaces = { admin: AdminWorkspace, teacher: TeacherWorkspace, parent: ParentWorkspace }
 
 const recentActivity = ['Concept building session', 'Weekly assessment', 'Chapter 5 notes']
 
@@ -74,6 +77,7 @@ export default function PortalDashboard({ role }) {
       <header className="dashboard-header">
         <Brand to="/" tagline={config.label} />
         <div className="dashboard-user">
+          {role !== 'admin' && <NotificationBell userId={user.id} sections={config.sections} onNavigate={setActiveSection} />}
           <span className="user-avatar" aria-hidden="true">{user.full_name.trim()[0]?.toUpperCase() ?? config.role[0]}</span>
           <span><strong>Welcome, {user.full_name}</strong><small>{config.role} account · {user.login_id}</small></span>
           <button className="logout-link" type="button" onClick={handleExit}>Exit ↗</button>
@@ -102,7 +106,13 @@ export default function PortalDashboard({ role }) {
                 <Workspace section={activeSection} onNavigate={setActiveSection} />
               </Suspense>
             )
-            : <DemoContent config={config} activeSection={activeSection} />}
+            : activeSection === 'Announcements'
+              ? (
+                <Suspense fallback={<p className="auth-loading-inline" role="status">Loading announcements…</p>}>
+                  <div className="admin-workspace"><AnnouncementsFeed /></div>
+                </Suspense>
+              )
+              : <DemoContent config={config} activeSection={activeSection} />}
         </section>
       </main>
     </div>

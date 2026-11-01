@@ -28,6 +28,13 @@ function describe({ action, meta = {} }) {
     case 'timetable.slot_removed': return `Timetable: removed ${meta.subject} · ${meta.class} (${meta.days}, ${meta.time})`
     case 'holiday.added': return `Added holiday ${meta.title} on ${meta.date}`
     case 'holiday.removed': return `Removed holiday ${meta.title} (${meta.date})`
+    case 'fee.created': return `Added fee ${meta.title} (₹${meta.amount}) for ${meta.for}${meta.count > 1 ? ` · ${meta.count} students` : ''}`
+    case 'fee.payment_recorded': return `Recorded ₹${meta.amount} from ${who} for ${meta.title}`
+    case 'fee.reminder_sent': return `Sent a fee reminder for ${meta.title} to ${who}${meta.to === 'parents' ? '’s parents' : ''}`
+    case 'fee.waived': return `Waived ${meta.title} for ${who}`
+    case 'fee.deleted': return `Deleted fee ${meta.title} for ${who}`
+    case 'announcement.posted': return `Posted announcement “${meta.title}” to ${meta.audience}${meta.class ? ` · ${meta.class}` : ''}`
+    case 'announcement.deleted': return `Deleted announcement “${meta.title}”`
     default: return action
   }
 }

@@ -7,6 +7,7 @@ import '../admin/admin.css'
 import AttendancePanel from './AttendancePanel.jsx'
 import TeacherOverview from './TeacherOverview.jsx'
 import TeacherTimetable from './TeacherTimetable.jsx'
+import AnnouncementsFeed from '../portal/AnnouncementsFeed.jsx'
 import './teacher.css'
 
 const comingNext = {
@@ -38,6 +39,12 @@ export default function TeacherWorkspace({ section, onNavigate }) {
       {home.error && <LoadState error={`Couldn’t refresh. ${home.error}`} onRetry={home.reload} />}
       {section === 'Overview' && <TeacherOverview home={home.data} onTakeAttendance={takeAttendance} onNavigate={onNavigate} />}
       {section === 'Timetable' && <TeacherTimetable home={home.data} reload={home.reload} />}
+      {section === 'Announcements' && (
+        <section className="admin-block">
+          <div className="admin-block-head"><p className="section-label">From the institute</p><h2>Announcements</h2></div>
+          <AnnouncementsFeed />
+        </section>
+      )}
       {/* Kept mounted so switching sections doesn't throw away a half-marked register. */}
       <div hidden={section !== 'Attendance'}>
         <AttendancePanel home={home.data} reload={home.reload} openSession={openSession} onOpen={setOpenSession} />

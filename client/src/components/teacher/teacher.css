@@ -1,6 +1,15 @@
 /* Teacher workspace — builds on admin.css (buttons, fields, blocks) and the dashboard cards in App.css. */
 
 .teacher-workspace .dashboard-stats { margin-top: 0; }
+.dashboard-stats article.is-clickable { cursor: pointer; }
+.stat-open { border: 0; padding: 0; background: none; color: inherit; font: 10px var(--mono); text-transform: uppercase; cursor: pointer; text-align: right; }
+.stat-open::before { content: ''; position: absolute; inset: 0; z-index: 1; }
+.stat-open:focus-visible { outline: none; }
+.dashboard-stats article.is-clickable:has(.stat-open:focus-visible) { outline: 2px solid var(--ink); outline-offset: 3px; }
+.my-students-group { display: grid; gap: 6px; }
+.my-students-group h3 { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.my-students-group h3 small { margin-left: 6px; color: #657069; }
+.my-students .session-list li { gap: 14px; }
 .teacher-next-btn { margin-top: 28px; box-shadow: 3px 3px 0 var(--yellow); border-color: var(--cream); }
 .teacher-subjects ul { list-style: none; margin: 26px 0 22px; display: grid; gap: 0; border-top: 1px solid var(--ink); }
 .teacher-subjects li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ink); font-size: 14px; }
@@ -11,16 +20,6 @@
 .teacher-recent-row { grid-template-columns: 45px 1fr 170px 80px; }
 .dashboard-table .panel-heading .admin-link { padding: 0; }
 
-/* ---------- Register progress ---------- */
-.register-chip { flex: none; padding: 4px 8px; border: 1px solid var(--ink); font: 10px var(--mono); text-transform: uppercase; background: var(--cream); }
-.register-chip.register-done { background: var(--green); }
-.register-chip.register-partial { background: var(--yellow); }
-.register-chip.register-pending { background: #fbe0d8; }
-.register-chip.register-muted { color: #657069; border-color: var(--line); }
-.activity-status.register-pending { color: #a3321c; }
-.activity-status.register-partial { color: #8a6a00; }
-.activity-status.register-muted { color: #657069; }
-
 /* ---------- Class lists ---------- */
 .session-list { border-top: 1.5px solid var(--ink); }
 .session-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -28,7 +27,6 @@
 .session-main strong { font-size: 15px; }
 .session-main small { font: 11px var(--mono); color: #657069; }
 
-.register-chip.register-plain { background: #fff; }
 
 /* ---------- Timetable ---------- */
 .timetable-day { display: grid; gap: 8px; }

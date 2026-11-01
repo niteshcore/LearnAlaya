@@ -234,3 +234,51 @@ export async function removeHoliday(holiday) {
   await run(supabase.from('holidays').delete().eq('date', holiday.date))
   await logActivity('holiday.removed', 'holidays', holiday.date, { date: holiday.date, title: holiday.title })
 }
+
+// ---------- Fees ----------
+// fee_dues.status is kept in step with payments by the sync_fee_status trigger (0001);
+// 'overdue' is shown from the due date, since the nightly job that stores it isn't scheduled.
+
+export async function loadFees() {
+  const [settingsRows, dues, payments] = await Promise.all([
+    run(supabase.from('institute_settings').select('timezone').limit(1)),
+    run(supabase.from('fee_dues').select('id, student_id, title, amount, due_date, status, created_at').order('due_date', { ascending: false }).limit(5000)),
+    run(supabase.from('fee_payments').select('id, due_id, amount, paid_on, mode, reference, created_at').order('paid_on', { ascending: false }).limit(10000)),
+  ])
+  return { today: dateInZone(settingsRows[0]?.timezone ?? DEFAULT_TIMEZONE), dues, payments }
+}
+
+export async function createDues({ students, title, amount, dueDate, forLabel }) {
+  await run(supabase.from('fee_dues').insert(students.map((student) => ({ student_id: student.id, title, amount, due_date: dueDate }))))
+  await logActivity('fee.created', 'fee_dues', null, { title, amount, for: forLabel, count: students.length })
+}
+
+export async function recordPayment(due, student, { amount, paidOn, mode, reference }) {
+  await run(supabase.from('fee_payments').insert({ due_id: due.id, amount, paid_on: paidOn, mode: mode || null, reference: reference || null, recorded_by: await currentUserId() }))
+  await logActivity('fee.payment_recorded', 'fee_dues', due.id, { title: due.title, amount, full_name: student?.full_name, login_id: student?.login_id })
+}
+
+// In-app reminder to the student's parents (or the student, if no parent is linked).
+export async function sendFeeReminder(due, student, balance) {
+  const links = await run(supabase.from('parent_students').select('parent_id').eq('student_id', due.student_id))
+  const recipients = links.length ? links.map((link) => link.parent_id) : [due.student_id]
+  const stamp = Date.now()
+  await run(supabase.from('notifications').insert(recipients.map((recipient) => ({
+    recipient_id: recipient,
+    type: 'fee_reminder',
+    payload: { due_id: due.id, student_id: due.student_id, title: due.title, amount: balance, due_date: due.due_date },
+    dedupe_key: `fee_manual:${due.id}:${stamp}:${recipient}`,
+  }))))
+  await logActivity('fee.reminder_sent', 'fee_dues', due.id, { title: due.title, full_name: student?.full_name, login_id: student?.login_id, to: links.length ? 'parents' : 'student' })
+  return { toParents: links.length > 0, count: recipients.length }
+}
+
+export async function waiveDue(due, student) {
+  await run(supabase.from('fee_dues').update({ status: 'waived' }).eq('id', due.id))
+  await logActivity('fee.waived', 'fee_dues', due.id, { title: due.title, full_name: student?.full_name, login_id: student?.login_id })
+}
+
+export async function deleteDue(due, student) {
+  await run(supabase.from('fee_dues').delete().eq('id', due.id))
+  await logActivity('fee.deleted', 'fee_dues', due.id, { title: due.title, full_name: student?.full_name, login_id: student?.login_id })
+}

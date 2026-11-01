@@ -1,0 +1,37 @@
+/* Shared portal pieces: notification bell, announcements. */
+
+/* ---------- Bell ---------- */
+.notify { position: relative; }
+.notify-button { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--ink); border-radius: 50%; background: var(--cream); color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.notify-button:hover { background: #fff; }
+.notify-button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.notify-count { position: absolute; top: -5px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; display: grid; place-items: center; border: 1.5px solid var(--ink); border-radius: 999px; background: var(--red); color: var(--ink); font: 700 11px var(--mono); }
+.notify-panel { position: absolute; z-index: 40; top: calc(100% + 10px); right: 0; width: min(380px, calc(100vw - 32px)); max-height: min(70vh, 520px); display: flex; flex-direction: column; border: 1.5px solid var(--ink); background: var(--cream); box-shadow: 6px 6px 0 var(--ink); text-align: left; }
+.notify-panel header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1.5px solid var(--ink); font-size: 14px; }
+.notify-panel ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
+.notify-panel li + li { border-top: 1px solid var(--line); }
+.notify-panel li button { width: 100%; display: grid; gap: 4px; padding: 12px 14px 12px 28px; position: relative; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.notify-panel li button:hover { background: #fff; }
+.notify-panel li button:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
+.notify-panel li button.is-unread { background: #fffbe9; }
+.notify-panel li button.is-unread::before { content: ''; position: absolute; left: 11px; top: 17px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); border: 1px solid var(--ink); }
+.notify-panel li strong { font-size: 13px; line-height: 1.35; font-weight: 600; }
+.notify-panel li button:not(.is-unread) strong { font-weight: 500; }
+.notify-panel li span { font-size: 12px; line-height: 1.4; color: #3e4a45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.notify-panel li small { font: 10px var(--mono); color: #657069; }
+.notify-empty { padding: 18px 14px; font-size: 13px; line-height: 1.5; color: #3e4a45; }
+.notify-link { border: 0; background: none; padding: 6px 0; color: var(--ink); font: 11px var(--mono); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* ---------- Announcements ---------- */
+.announcement-list { display: grid; gap: 14px; }
+.announcement { display: grid; gap: 8px; padding: 16px 18px; border: 1.5px solid var(--ink); background: #fffdf8; box-shadow: 3px 3px 0 var(--ink); }
+.announcement h3 { font-size: 20px; letter-spacing: -.04em; line-height: 1.2; }
+.announcement-meta { font: 11px var(--mono); color: #657069; text-transform: uppercase; }
+.announcement-body { font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.announcement-list.is-compact .announcement { box-shadow: none; padding: 12px 14px; }
+.announcement-list.is-compact .announcement-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+@media (max-width: 760px) {
+  .notify-button { width: 38px; height: 38px; }
+  .notify-panel { position: fixed; top: 74px; right: 16px; left: 16px; width: auto; max-height: calc(100dvh - 100px); }
+}

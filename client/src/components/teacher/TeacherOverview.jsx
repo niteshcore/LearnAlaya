@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { formatDay, formatTime } from '../../lib/format.js'
 import { timeInZone } from '../../lib/dates.js'
 import { registerState } from '../../lib/teacherApi.js'
+import { Modal } from '../admin/AdminUi.jsx'
 import Button from '../ui/Button.jsx'
+import MyStudents from './MyStudents.jsx'
 
 export default function TeacherOverview({ home, onTakeAttendance, onNavigate }) {
   const { teaching, sessions, today, settings } = home
@@ -13,17 +16,29 @@ export default function TeacherOverview({ home, onTakeAttendance, onNavigate }) 
   const now = timeInZone(settings.timezone)
   const next = todays.find((s) => s.end_time.slice(0, 5) > now) ?? null
 
+  const [showStudents, setShowStudents] = useState(false)
+
   const stats = [
-    [studentCount, 'My students'],
-    [todays.length, 'Classes today'],
-    [pending.length, 'Attendance pending'],
+    [studentCount, 'My students', () => setShowStudents(true)],
+    [todays.length, 'Classes today', () => onNavigate('Timetable')],
+    [pending.length, 'Attendance pending', () => onNavigate('Attendance')],
   ]
 
   return (
     <>
       <div className="dashboard-stats teacher-stats">
-        {stats.map(([value, label]) => <article key={label}><strong>{String(value).padStart(2, '0')}</strong><span>{label}</span></article>)}
+        {stats.map(([value, label, open]) => (
+          <article key={label} className="is-clickable">
+            <strong>{String(value).padStart(2, '0')}</strong>
+            <button type="button" className="stat-open" onClick={open}>{label} ↗</button>
+          </article>
+        ))}
       </div>
+      {showStudents && (
+        <Modal title="My students" onClose={() => setShowStudents(false)}>
+          <MyStudents home={home} />
+        </Modal>
+      )}
       <div className="dashboard-panels">
         <article className="dashboard-panel panel-primary">
           <div className="panel-heading"><span>✦</span><p>Next up</p></div>

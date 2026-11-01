@@ -15,6 +15,14 @@ export function currentAcademicYear(today = new Date()) {
   return `${year}-${String((year + 1) % 100).padStart(2, '0')}`
 }
 
+const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 2 })
+export const formatMoney = (amount) => rupees.format(Number(amount) || 0)
+
+// A calendar date ('2026-11-01') -> 'Sun, 1 Nov'
+export function formatDate(isoDate, { year = false } = {}) {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: year ? 'numeric' : undefined, timeZone: 'UTC' })
+}
+
 // '14:30:00' -> '2:30 PM'
 export function formatTime(time) {
   const [hours, minutes] = time.split(':').map(Number)
