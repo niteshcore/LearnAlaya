@@ -134,6 +134,27 @@
 .admin-subhead { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
 .admin-status-line { font-size: 14px; }
 
+/* ---------- Timetable ---------- */
+.tt-grid { display: grid; grid-template-columns: repeat(var(--tt-days, 6), minmax(0, 1fr)); border: 1.5px solid var(--ink); background: #fffdf8; }
+.tt-day { display: grid; align-content: start; gap: 8px; padding: 10px 8px 12px; border-right: 1px solid var(--line); min-width: 0; }
+.tt-day:last-child { border-right: 0; }
+.tt-day h3 { padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.tt-day-long { display: none; }
+.tt-slot { display: grid; gap: 3px; width: 100%; padding: 8px 9px; text-align: left; border: 1.5px solid var(--ink); border-left: 6px solid var(--tt-color); background: #fff; color: var(--ink); cursor: pointer; box-shadow: 2px 2px 0 var(--ink); transition: transform .15s ease, box-shadow .15s ease; }
+.tt-slot:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.tt-slot:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tt-slot small { font: 10px var(--mono); color: #3e4a45; }
+.tt-slot strong { font-size: 14px; line-height: 1.2; overflow-wrap: anywhere; }
+.tt-slot span { font-size: 12px; color: #3e4a45; overflow-wrap: anywhere; }
+.tt-slot em { font: normal 10px var(--mono); color: #8a6a00; }
+.tt-warning { color: #a3321c !important; font-weight: 600; }
+.tt-free { font: 11px var(--mono); color: #a7aea9; padding: 4px 0; }
+.day-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.day-picker button { min-width: 52px; min-height: 42px; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 3px; background: #fff; color: var(--ink); font: 600 13px var(--display); cursor: pointer; }
+.day-picker button.is-active { background: var(--ink); color: var(--cream); }
+.day-picker button:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.admin-notice code { font: 12px var(--mono); }
+
 /* ---------- Credentials ---------- */
 .credential-card { display: grid; gap: 12px; padding: 18px; border: 2px solid var(--ink); background: var(--yellow); box-shadow: 5px 5px 0 var(--ink); }
 .credential-kicker { font: 11px var(--mono); text-transform: uppercase; }
@@ -154,6 +175,13 @@
 /* ---------- Tablet & phone ---------- */
 @media (max-width: 1024px) {
   .dashboard-stats.admin-stats { grid-template-columns: repeat(2, 1fr); }
+  /* Seven narrow columns stop being readable: one row per day instead. */
+  .tt-grid { grid-template-columns: 1fr; }
+  .tt-day { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); border-right: 0; border-bottom: 1px solid var(--line); }
+  .tt-day:last-child { border-bottom: 0; }
+  .tt-day h3 { grid-column: 1 / -1; }
+  .tt-day-long { display: inline; }
+  .tt-day-short { display: none; }
 }
 
 @media (max-width: 760px) {
@@ -179,6 +207,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .admin-btn { transition: none; }
+  .admin-btn, .tt-slot { transition: none; }
   .admin-loading::before { animation: none; }
 }

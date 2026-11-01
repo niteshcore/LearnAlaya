@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchProfile, supabase, supabaseConfigError } from '../lib/supabase.js'
+import { fetchProfile, sessionAal, supabase, supabaseConfigError } from '../lib/supabase.js'
 import { AuthContext } from './authContext.js'
 
 // If Supabase can't restore a stored session in this time (offline, project down), stop waiting and treat it as signed out.
@@ -45,7 +45,7 @@ export default function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ session, user, role: user?.role ?? null, loading, signOut, configError: supabaseConfigError }),
+    () => ({ session, user, role: user?.role ?? null, aal: sessionAal(session), loading, signOut, configError: supabaseConfigError }),
     [session, user, loading, signOut],
   )
 

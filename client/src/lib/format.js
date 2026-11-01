@@ -15,6 +15,21 @@ export function currentAcademicYear(today = new Date()) {
   return `${year}-${String((year + 1) % 100).padStart(2, '0')}`
 }
 
+// '14:30:00' -> '2:30 PM'
+export function formatTime(time) {
+  const [hours, minutes] = time.split(':').map(Number)
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'AM' : 'PM'}`
+}
+
+// A calendar date ('2026-11-01') relative to the institute's today.
+export function formatDay(isoDate, today) {
+  if (isoDate === today) return 'Today'
+  const date = new Date(`${isoDate}T00:00:00Z`)
+  const gap = Math.round((new Date(`${today}T00:00:00Z`) - date) / 86400000)
+  if (gap === 1) return 'Yesterday'
+  return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+}
+
 export function formatWhen(iso) {
   const date = new Date(iso)
   const now = new Date()

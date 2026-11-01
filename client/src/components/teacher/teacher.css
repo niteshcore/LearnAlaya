@@ -1,0 +1,84 @@
+/* Teacher workspace — builds on admin.css (buttons, fields, blocks) and the dashboard cards in App.css. */
+
+.teacher-workspace .dashboard-stats { margin-top: 0; }
+.teacher-next-btn { margin-top: 28px; box-shadow: 3px 3px 0 var(--yellow); border-color: var(--cream); }
+.teacher-subjects ul { list-style: none; margin: 26px 0 22px; display: grid; gap: 0; border-top: 1px solid var(--ink); }
+.teacher-subjects li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ink); font-size: 14px; }
+.teacher-subjects li i { width: 12px; height: 12px; border: 1px solid var(--ink); border-radius: 50%; }
+.teacher-subjects li strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.teacher-subjects li small { font: 11px var(--mono); }
+.teacher-empty { margin: 30px 0 10px; font-size: 14px; line-height: 1.5; }
+.teacher-recent-row { grid-template-columns: 45px 1fr 170px 80px; }
+.dashboard-table .panel-heading .admin-link { padding: 0; }
+
+/* ---------- Register progress ---------- */
+.register-chip { flex: none; padding: 4px 8px; border: 1px solid var(--ink); font: 10px var(--mono); text-transform: uppercase; background: var(--cream); }
+.register-chip.register-done { background: var(--green); }
+.register-chip.register-partial { background: var(--yellow); }
+.register-chip.register-pending { background: #fbe0d8; }
+.register-chip.register-muted { color: #657069; border-color: var(--line); }
+.activity-status.register-pending { color: #a3321c; }
+.activity-status.register-partial { color: #8a6a00; }
+.activity-status.register-muted { color: #657069; }
+
+/* ---------- Class lists ---------- */
+.session-list { border-top: 1.5px solid var(--ink); }
+.session-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.session-main { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.session-main strong { font-size: 15px; }
+.session-main small { font: 11px var(--mono); color: #657069; }
+
+.register-chip.register-plain { background: #fff; }
+
+/* ---------- Timetable ---------- */
+.timetable-day { display: grid; gap: 8px; }
+.timetable-day h3 { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .04em; margin-top: 6px; }
+.timetable-row { flex-wrap: wrap; }
+.timetable-row.is-cancelled .session-main strong, .timetable-row.is-rescheduled .session-main strong { text-decoration: line-through; color: #657069; }
+.timetable-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.timetable-cancel { flex-basis: 100%; }
+
+/* ---------- Register ---------- */
+.attendance-head { display: grid; gap: 14px; justify-items: start; }
+.attendance-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 14px; border: 1.5px solid var(--ink); background: #fffdf8; font-size: 13px; }
+.attendance-count b { font: 600 18px var(--display); margin-right: 2px; }
+.attendance-count.is-absent b { color: #a3321c; }
+.attendance-summary .admin-btn { margin-left: auto; }
+.attendance-list { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
+.attendance-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); transition: background-color .15s ease; }
+.attendance-list li.is-absent { background: #fbe0d8; }
+.attendance-list li.is-late { background: #fbefc8; }
+.attendance-list li.is-leave { background: #eef1ec; }
+.attendance-student { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.attendance-student > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.attendance-student strong { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attendance-student small { font: 11px var(--mono); color: #657069; }
+.attendance-roll { flex: none; min-width: 34px; font: 12px var(--mono); color: #3e4a45; }
+.attendance-choices { display: grid; grid-template-columns: repeat(4, 44px); border: 1.5px solid var(--ink); flex: none; }
+.attendance-choices button { height: 42px; border: 0; border-right: 1.5px solid var(--ink); background: #fff; color: var(--ink); font: 600 13px var(--mono); cursor: pointer; }
+.attendance-choices button:last-child { border-right: 0; }
+.attendance-choices button:disabled { cursor: not-allowed; }
+.attendance-choices button:disabled:not([aria-checked=true]) { color: #a7aea9; }
+.attendance-choices button:focus-visible { outline: 2px solid var(--ink); outline-offset: -5px; }
+.attendance-choices button.is-present[aria-checked=true] { background: var(--green); }
+.attendance-choices button.is-absent[aria-checked=true] { background: var(--red); }
+.attendance-choices button.is-late[aria-checked=true] { background: var(--yellow); }
+.attendance-choices button.is-leave[aria-checked=true] { background: var(--ink); color: var(--cream); }
+.attendance-save { position: sticky; bottom: 0; z-index: 2; display: grid; gap: 10px; justify-items: start; padding: 14px 0; background: var(--cream); border-top: 1.5px solid var(--ink); }
+.attendance-save .admin-notice { justify-self: stretch; }
+
+@media (max-width: 760px) {
+  .teacher-recent-row { grid-template-columns: 28px 1fr 70px; }
+  .session-list li { flex-wrap: wrap; }
+  .session-list li .admin-btn { flex: 1 1 100%; }
+  .attendance-summary .admin-btn { margin-left: 0; flex: 1 1 100%; }
+  .attendance-list li { flex-wrap: wrap; padding: 10px 4px; }
+  .attendance-choices { width: 100%; grid-template-columns: repeat(4, 1fr); }
+  .attendance-choices button { height: 44px; }
+  .attendance-save { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .attendance-save .admin-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attendance-list li { transition: none; }
+}

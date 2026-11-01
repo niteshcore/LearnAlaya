@@ -23,6 +23,11 @@ function describe({ action, meta = {} }) {
     case 'student.enrollment_updated': return `Changed class / subjects for ${who}`
     case 'parent.linked': return `Linked ${meta.parent} to ${meta.student}${meta.relation ? ` (${meta.relation})` : ''}`
     case 'parent.unlinked': return `Unlinked ${meta.parent} from ${meta.student}`
+    case 'timetable.slot_added': return `Timetable: added ${meta.subject} · ${meta.class} on ${meta.days}, ${meta.time}${meta.until ? ` (until ${meta.until})` : ''}`
+    case 'timetable.slot_updated': return `Timetable: changed ${meta.subject} · ${meta.class} to ${meta.days}, ${meta.time}`
+    case 'timetable.slot_removed': return `Timetable: removed ${meta.subject} · ${meta.class} (${meta.days}, ${meta.time})`
+    case 'holiday.added': return `Added holiday ${meta.title} on ${meta.date}`
+    case 'holiday.removed': return `Removed holiday ${meta.title} (${meta.date})`
     default: return action
   }
 }

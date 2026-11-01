@@ -31,8 +31,21 @@ export const supabase = connection.client
 export const supabaseConfigError = connection.problem
 
 // Must match the address the admin-create-user Edge Function gives new accounts.
+// Someone who types the full address (admin1@learnalaya.app) gets it used as-is.
 export function loginIdToEmail(loginId) {
-  return `${loginId.trim().toLowerCase()}@learnalaya.app`
+  const value = loginId.trim().toLowerCase()
+  return value.includes('@') ? value : `${value}@learnalaya.app`
+}
+
+// 'aal2' once the session has passed a one-time code; read from the access token, which RLS also checks.
+export function sessionAal(session) {
+  if (!session?.access_token) return null
+  try {
+    const payload = session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '='))).aal ?? 'aal1'
+  } catch {
+    return 'aal1'
+  }
 }
 
 export async function fetchProfile(userId) {

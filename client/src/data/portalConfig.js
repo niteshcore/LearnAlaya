@@ -25,10 +25,7 @@ export const portalConfig = {
     tone: 'red',
     title: 'Make every lesson count.',
     description: 'A focused workspace for attendance, marks, notes and your class timetable.',
-    stats: [['24', 'Students'], ['06', 'Notes uploaded'], ['03', 'Classes today']],
-    sections: ['Overview', 'Attendance', 'Publish results', 'Upload notes'],
-    nextUp: { title: 'Class 10 · Mathematics', detail: '24 students · Attendance pending', progress: 'Open workspace' },
-    quickAction: 'Ready to mark attendance?',
+    sections: ['Overview', 'Timetable', 'Attendance', 'Publish results', 'Upload notes'],
   },
   parent: {
     label: 'Parent Portal',
@@ -47,6 +44,6 @@ export const portalConfig = {
     tone: 'yellow',
     title: 'Keep the whole school moving.',
     description: 'Set up classes, add people and see what is happening across LearnAlaya.',
-    sections: ['Overview', 'Users', 'Classes & subjects', 'Activity log'],
+    sections: ['Overview', 'Users', 'Classes & subjects', 'Timetable', 'Activity log'],
   },
 }

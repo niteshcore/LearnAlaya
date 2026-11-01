@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
 import { signInToPortal } from '../auth/signInToPortal.js'
@@ -8,6 +8,8 @@ import Button from '../components/ui/Button.jsx'
 import { loginPaths, portalConfig } from '../data/portalConfig.js'
 import { contactEmail } from '../data/siteContent.js'
 
+const AdminMfaStep = lazy(() => import('../auth/AdminMfaStep.jsx'))
+
 export default function PortalLogin({ role }) {
   const config = portalConfig[role]
   const navigate = useNavigate()
@@ -15,9 +17,11 @@ export default function PortalLogin({ role }) {
   const [userId, setUserId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [failure, setFailure] = useState(null)
-  const { role: currentRole, loading, configError } = useAuth()
+  const { role: currentRole, aal, loading, configError, signOut } = useAuth()
+  // An admin with only a password session still has to pass the one-time code.
+  const needsMfa = role === 'admin' && currentRole === 'admin' && aal !== 'aal2'
 
-  if (!loading && !submitting && currentRole === role) return <Navigate to={`/${role}`} replace />
+  if (!loading && !submitting && currentRole === role && !needsMfa) return <Navigate to={`/${role}`} replace />
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -30,7 +34,13 @@ export default function PortalLogin({ role }) {
       setSubmitting(false)
       return
     }
-    navigate(`/${result.role}`, { replace: true })
+    // Admins stay here: once the session loads, the one-time code step replaces the form.
+    if (result.role !== 'admin') navigate(`/${result.role}`, { replace: true })
+  }
+
+  async function cancelMfa() {
+    await signOut()
+    setSubmitting(false)
   }
 
   return (
@@ -54,20 +64,26 @@ export default function PortalLogin({ role }) {
                 {import.meta.env.DEV && <><br /><small>{configError}</small></>}
               </p>
             )}
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="user-id">Institute ID</label>
-              <input id="user-id" value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={`Enter your ${role} ID`} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
-              <label htmlFor="password">Password</label>
-              <input id="password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" required />
-              <label className="checkbox-label"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show password</label>
-              {failure && (
-                <p className="login-error" role="alert">
-                  {failure.error}
-                  {failure.wrongRole && <> <Link to={loginPaths[failure.wrongRole]}>Go to the {failure.wrongRole} login</Link></>}
-                </p>
-              )}
-              <Button type="submit" className="login-button" disabled={submitting || Boolean(configError)}>{submitting ? 'Signing in…' : 'Secure login'}</Button>
-            </form>
+            {needsMfa ? (
+              <Suspense fallback={<p className="mfa-status" role="status">Preparing two-step verification…</p>}>
+                <AdminMfaStep onVerified={() => navigate('/admin', { replace: true })} onCancel={cancelMfa} />
+              </Suspense>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="user-id">Institute ID</label>
+                <input id="user-id" value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={role === 'admin' ? 'Admin ID or email' : `Enter your ${role} ID`} autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
+                <label htmlFor="password">Password</label>
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" autoComplete="current-password" required />
+                <label className="checkbox-label"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> Show password</label>
+                {failure && (
+                  <p className="login-error" role="alert">
+                    {failure.error}
+                    {failure.wrongRole && <> <Link to={loginPaths[failure.wrongRole]}>Go to the {failure.wrongRole} login</Link></>}
+                  </p>
+                )}
+                <Button type="submit" className="login-button" disabled={submitting || Boolean(configError)}>{submitting ? 'Signing in…' : 'Secure login'}</Button>
+              </form>
+            )}
             <p className="login-help">Lost your ID or password? <a href={`mailto:${contactEmail}`}>Contact admin</a></p>
           </div>
         </div>

@@ -1,24 +1,14 @@
 import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
+import { DAY_SHORT, DEFAULT_TIMEZONE, dateInZone } from './dates.js'
+import { formatTime } from './format.js'
+import { byNatural, classLabel, run } from './query.js'
 import { supabase } from './supabase.js'
+
+export { classLabel }
 
 // Every query here runs as the signed-in admin; RLS (admin_all) is what allows it.
 // Queries avoid PostgREST embedding on purpose: profiles <-> students is linked both directly
 // and through parent_students, which makes embeds ambiguous. Lists are joined in the browser instead.
-
-function friendly(error) {
-  if (!error) return 'Something went wrong.'
-  if (error.code === '23505') return 'That already exists.'
-  if (error.code === '23503') return 'That record is linked to something that no longer exists.'
-  if (error.code === '42501') return 'You don’t have permission to do that.'
-  if (/fetch|network/i.test(error.message ?? '')) return 'We couldn’t reach LearnAlaya. Check your connection and try again.'
-  return error.message || 'Something went wrong.'
-}
-
-async function run(query) {
-  const { data, error, count } = await query
-  if (error) throw new Error(friendly(error))
-  return count ?? data
-}
 
 async function currentUserId() {
   const { data } = await supabase.auth.getSession()
@@ -43,12 +33,6 @@ async function invokeFunction(name, body) {
   }
   if (error instanceof FunctionsFetchError) throw new Error('We couldn’t reach LearnAlaya. Check your connection and try again.')
   throw new Error(error.message || 'Something went wrong.')
-}
-
-const byNatural = (a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' })
-
-export function classLabel(cls) {
-  return cls ? `${cls.name} ${cls.section}` : 'No class'
 }
 
 // ---------- Overview & activity ----------
@@ -187,4 +171,66 @@ export async function linkParent({ parent, student, relation }) {
 export async function unlinkParent({ parent, student }) {
   await run(supabase.from('parent_students').delete().eq('parent_id', parent.id).eq('student_id', student.id))
   await logActivity('parent.unlinked', 'parent_students', student.id, { parent: parent.full_name, student: student.full_name })
+}
+
+// ---------- Timetable & holidays ----------
+// Editing timetable_slots is all the admin does: the 0003 triggers keep the next two weeks of
+// class_sessions in step, cancel classes on holidays, and leave alone anything already taught or changed by hand.
+
+const slotTime = (slot) => `${formatTime(slot.start_time)} – ${formatTime(slot.end_time)}`
+
+export async function loadTimetable() {
+  const [settingsRows, slots] = await Promise.all([
+    run(supabase.from('institute_settings').select('timezone').limit(1)),
+    run(supabase.from('timetable_slots').select('id, class_subject_id, day_of_week, start_time, end_time, room, effective_from, effective_to').limit(5000)),
+  ])
+  const timezone = settingsRows[0]?.timezone ?? DEFAULT_TIMEZONE
+  const today = dateInZone(timezone)
+  const [holidays, upkeep] = await Promise.all([
+    run(supabase.from('holidays').select('date, title').gte('date', today).order('date')),
+    supabase.rpc('ensure_upcoming_sessions'),
+  ])
+  // PGRST202: the function doesn't exist, i.e. 0003_timetable.sql hasn't been run yet.
+  const upkeepMissing = upkeep.error?.code === 'PGRST202'
+  if (upkeep.error && !upkeepMissing) console.warn('[LearnAlaya] ensure_upcoming_sessions failed', upkeep.error.message)
+  return {
+    today,
+    upkeepMissing,
+    holidays,
+    slots: slots.filter((slot) => !slot.effective_to || slot.effective_to >= today),
+  }
+}
+
+export async function addSlots({ classSubject, cls, subject, days, start, end, room, effectiveFrom, effectiveTo }) {
+  await run(supabase.from('timetable_slots').insert(days.map((day) => ({
+    class_subject_id: classSubject.id, day_of_week: day, start_time: start, end_time: end, room: room || null, effective_from: effectiveFrom, effective_to: effectiveTo ?? null,
+  }))))
+  await logActivity('timetable.slot_added', 'timetable_slots', classSubject.id, {
+    class: classLabel(cls), subject: subject.name, days: days.map((day) => DAY_SHORT[day]).join(', '), time: slotTime({ start_time: start, end_time: end }),
+    ...(effectiveTo ? { until: effectiveTo } : {}),
+  })
+}
+
+export async function updateSlot(slot, changes, { cls, subject }) {
+  await run(supabase.from('timetable_slots').update(changes).eq('id', slot.id))
+  await logActivity('timetable.slot_updated', 'timetable_slots', slot.id, {
+    class: classLabel(cls), subject: subject.name, days: DAY_SHORT[changes.day_of_week ?? slot.day_of_week], time: slotTime({ ...slot, ...changes }),
+  })
+}
+
+export async function deleteSlot(slot, { cls, subject }) {
+  await run(supabase.from('timetable_slots').delete().eq('id', slot.id))
+  await logActivity('timetable.slot_removed', 'timetable_slots', slot.id, {
+    class: classLabel(cls), subject: subject.name, days: DAY_SHORT[slot.day_of_week], time: slotTime(slot),
+  })
+}
+
+export async function addHoliday({ date, title }) {
+  await run(supabase.from('holidays').insert({ date, title }))
+  await logActivity('holiday.added', 'holidays', date, { date, title })
+}
+
+export async function removeHoliday(holiday) {
+  await run(supabase.from('holidays').delete().eq('date', holiday.date))
+  await logActivity('holiday.removed', 'holidays', holiday.date, { date: holiday.date, title: holiday.title })
 }

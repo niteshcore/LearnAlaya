@@ -6,6 +6,8 @@ import Button from '../components/ui/Button.jsx'
 import { portalConfig } from '../data/portalConfig.js'
 
 const AdminWorkspace = lazy(() => import('../components/admin/AdminWorkspace.jsx'))
+const TeacherWorkspace = lazy(() => import('../components/teacher/TeacherWorkspace.jsx'))
+const workspaces = { admin: AdminWorkspace, teacher: TeacherWorkspace }
 
 const recentActivity = ['Concept building session', 'Weekly assessment', 'Chapter 5 notes']
 
@@ -13,6 +15,7 @@ const recentActivity = ['Concept building session', 'Weekly assessment', 'Chapte
 function DemoContent({ config, activeSection }) {
   return (
     <>
+      <p className="demo-banner" role="note"><b>Preview</b> These numbers are sample data. Your real {config.role.toLowerCase()} details will show here soon.</p>
       <div className="dashboard-stats">
         {config.stats.map(([value, label]) => <article key={label}><strong>{value}</strong><span>{label}</span></article>)}
       </div>
@@ -59,6 +62,7 @@ export default function PortalDashboard({ role }) {
   const [activeSection, setActiveSection] = useState(config.sections[0])
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const Workspace = workspaces[role]
 
   async function handleExit() {
     navigate('/', { replace: true })
@@ -92,10 +96,10 @@ export default function PortalDashboard({ role }) {
             <div><p className="section-label">Today / {activeSection}</p><h1>{config.title}</h1><p>{config.description}</p></div>
             <DateChip />
           </div>
-          {role === 'admin'
+          {Workspace
             ? (
-              <Suspense fallback={<p className="auth-loading-inline" role="status">Loading admin tools…</p>}>
-                <AdminWorkspace section={activeSection} onNavigate={setActiveSection} />
+              <Suspense fallback={<p className="auth-loading-inline" role="status">Loading your workspace…</p>}>
+                <Workspace section={activeSection} onNavigate={setActiveSection} />
               </Suspense>
             )
             : <DemoContent config={config} activeSection={activeSection} />}

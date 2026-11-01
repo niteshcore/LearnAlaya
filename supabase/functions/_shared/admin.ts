@@ -76,7 +76,16 @@ export async function generateLoginId(admin: SupabaseClient, role: Role) {
   throw new HttpError(500, 'Could not find a free login ID. Try again.')
 }
 
-// Confirms the caller is an active admin, using their own JWT so RLS applies to the lookup.
+function tokenAal(token: string) {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '='))).aal ?? null
+  } catch {
+    return null
+  }
+}
+
+// Confirms the caller is an active admin who passed two-step verification, using their own JWT so RLS applies to the lookup.
 // Returns the caller's id and a service-role client for the privileged work.
 export async function requireAdmin(req: Request) {
   const authHeader = req.headers.get('Authorization')
@@ -88,8 +97,11 @@ export async function requireAdmin(req: Request) {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const { data: userData, error: userError } = await caller.auth.getUser(authHeader.slice('Bearer '.length))
+  const token = authHeader.slice('Bearer '.length)
+  const { data: userData, error: userError } = await caller.auth.getUser(token)
   if (userError || !userData.user) throw new HttpError(401, 'Your session has expired. Sign in again.')
+  // getUser has verified the token, so its claims can be trusted here.
+  if (tokenAal(token) !== 'aal2') throw new HttpError(403, 'Admin actions need two-step verification. Sign out and sign in again with your code.')
 
   const { data: profile, error: profileError } = await caller
     .from('profiles')
