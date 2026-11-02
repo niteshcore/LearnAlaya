@@ -112,7 +112,7 @@ const loginPathFor = { student: '/login/student', teacher: '/login/teacher', par
 // Shown once after creating an account or resetting a password; the password is never stored anywhere we can read again.
 export function CredentialCard({ fullName, role, loginId, password, title = 'Login created' }) {
   const loginUrl = `${window.location.origin}${loginPathFor[role] ?? '/'}`
-  const message = `LearnAlaya login for ${fullName}\nLogin ID: ${loginId}\nTemporary password: ${password}\nSign in at: ${loginUrl}`
+  const message = `LearnAlaya login for ${fullName}\nLogin ID: ${loginId}\nTemporary password: ${password}\nSign in at: ${loginUrl}\nYou’ll be asked to set your own password after signing in.`
   return (
     <article className="credential-card">
       <p className="credential-kicker">{title} · {role}</p>
@@ -121,7 +121,7 @@ export function CredentialCard({ fullName, role, loginId, password, title = 'Log
         <div><dt>Login ID</dt><dd><code>{loginId}</code><CopyButton text={loginId} /></dd></div>
         <div><dt>Temporary password</dt><dd><code>{password}</code><CopyButton text={password} /></dd></div>
       </dl>
-      <p className="credential-warning"><strong>This password won’t be shown again.</strong> Copy it now and share it with {fullName}.</p>
+      <p className="credential-warning"><strong>This password won’t be shown again.</strong> Copy it now and share it with {fullName}. They’ll have to choose their own password the first time they sign in.</p>
       <CopyButton text={message} label="Copy login message" />
     </article>
   )

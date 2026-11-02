@@ -9,7 +9,7 @@
 //               subject_ids = class_subjects ids of that class the student takes
 //   children    [{ student_id, relation? }]                          optional, role = 'parent' only
 //
-// Returns { user_id, login_id, role, temporary_password }.
+// Returns { user_id, login_id, role, temporary_password }. The person must set their own password at first sign-in.
 import {
   generateLoginId,
   generatePassword,
@@ -21,6 +21,7 @@ import {
   normaliseLoginId,
   readBody,
   requireAdmin,
+  requirePasswordChange,
   ROLES,
   type Role,
 } from '../_shared/admin.ts'
@@ -167,6 +168,7 @@ Deno.serve(handle(async (req) => {
       const { error } = await run()
       if (error) throw insertError(error, what)
     }
+    await requirePasswordChange(admin, userId)
   } catch (error) {
     // Deleting the auth user cascades to every row inserted above.
     const { error: cleanupError } = await admin.auth.admin.deleteUser(userId)

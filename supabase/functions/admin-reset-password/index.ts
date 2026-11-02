@@ -1,11 +1,12 @@
 // POST (admin only). Sets a new temporary password for an account.
 //
 // Body: { login_id } or { user_id }
-// Returns { user_id, login_id, temporary_password }.
+// Returns { user_id, login_id, temporary_password }. The account is locked to "set your own password"
+// straight away, so a session still open somewhere else can't read anything with the old password.
 //
 // Another admin's password can only be reset by a founder, so a regular admin
 // can't take over a founder account and its finance access.
-import { generatePassword, handle, HttpError, json, logActivity, normaliseLoginId, readBody, requireAdmin } from '../_shared/admin.ts'
+import { generatePassword, handle, HttpError, json, logActivity, normaliseLoginId, readBody, requireAdmin, requirePasswordChange } from '../_shared/admin.ts'
 
 Deno.serve(handle(async (req) => {
   const { adminId, admin } = await requireAdmin(req)
@@ -30,6 +31,7 @@ Deno.serve(handle(async (req) => {
   const temporaryPassword = generatePassword()
   const { error: updateError } = await admin.auth.admin.updateUserById(target.id, { password: temporaryPassword })
   if (updateError) throw updateError
+  await requirePasswordChange(admin, target.id)
 
   await logActivity(admin, adminId, 'user.password_reset', target.id, { login_id: target.login_id, full_name: target.full_name })
 

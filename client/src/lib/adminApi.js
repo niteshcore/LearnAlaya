@@ -1,7 +1,6 @@
-import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js'
 import { DAY_SHORT, DEFAULT_TIMEZONE, dateInZone } from './dates.js'
 import { formatTime } from './format.js'
-import { byNatural, classLabel, run } from './query.js'
+import { byNatural, classLabel, invokeFunction, run } from './query.js'
 import { supabase } from './supabase.js'
 
 export { classLabel }
@@ -21,18 +20,6 @@ export async function logActivity(action, entity, entityId, meta = {}) {
     actor_id: await currentUserId(), action, entity, entity_id: entityId ? String(entityId) : null, meta,
   })
   if (error) console.error(`[LearnAlaya] activity log failed for ${action}`, error)
-}
-
-async function invokeFunction(name, body) {
-  const { data, error } = await supabase.functions.invoke(name, { body })
-  if (!error) return data
-  if (error instanceof FunctionsHttpError) {
-    const payload = await error.context.json().catch(() => null)
-    if (error.context.status === 404 && !payload?.error) throw new Error(`The ${name} Edge Function isn’t deployed yet.`)
-    throw new Error(payload?.error ?? payload?.message ?? `The server said no (${error.context.status}).`)
-  }
-  if (error instanceof FunctionsFetchError) throw new Error('We couldn’t reach LearnAlaya. Check your connection and try again.')
-  throw new Error(error.message || 'Something went wrong.')
 }
 
 // ---------- Overview & activity ----------
@@ -125,6 +112,13 @@ export function createUser(payload) {
 
 export async function resetPassword(user) {
   return invokeFunction('admin-reset-password', { user_id: user.id })
+}
+
+// null before 0007 has been run, or for accounts made before it (admins).
+export async function getPasswordStatus(userId) {
+  const { data, error } = await supabase.from('account_security').select('must_change_password, password_changed_at').eq('user_id', userId).maybeSingle()
+  if (error) return null
+  return data
 }
 
 export async function setUserActive(user, isActive) {

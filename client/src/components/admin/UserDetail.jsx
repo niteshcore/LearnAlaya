@@ -2,8 +2,8 @@ import { useCallback, useState } from 'react'
 import { useAuth } from '../../auth/authContext.js'
 import useAction from '../../hooks/useAction.js'
 import useLoad from '../../hooks/useLoad.js'
-import { classLabel, getSubjectIds, linkParent, listParentLinks, resetPassword, setUserActive, unlinkParent, updateEnrollment, updateUserDetails } from '../../lib/adminApi.js'
-import { normalisePhone } from '../../lib/format.js'
+import { classLabel, getPasswordStatus, getSubjectIds, linkParent, listParentLinks, resetPassword, setUserActive, unlinkParent, updateEnrollment, updateUserDetails } from '../../lib/adminApi.js'
+import { formatWhen, normalisePhone } from '../../lib/format.js'
 import { ConfirmButton, CredentialCard, LoadState, Notice } from './AdminUi.jsx'
 import StudentPicker from './StudentPicker.jsx'
 
@@ -48,15 +48,24 @@ function AccountActions({ user, onChanged }) {
   const [credentials, setCredentials] = useState(null)
   const action = useAction()
   const isMe = me?.id === user.id
+  const passwordLoader = useCallback(() => getPasswordStatus(user.id), [user.id])
+  const password = useLoad(passwordLoader)
 
   async function handleReset() {
     let result
-    if (await action.run(async () => { result = await resetPassword(user) })) setCredentials(result)
+    if (await action.run(async () => { result = await resetPassword(user) })) {
+      setCredentials(result)
+      password.reload()
+    }
   }
 
   return (
     <div className="admin-stack">
       <p className="admin-status-line">Status: <strong>{user.is_active ? 'Active' : 'Deactivated'}</strong>{!user.is_active && ' — this person can’t sign in.'}</p>
+      {password.data && (
+        <p className="admin-status-line">Password: <strong>{password.data.must_change_password ? 'Still the temporary one' : 'Set by them'}</strong>
+          {password.data.must_change_password ? ' — they’ll be asked to choose their own when they sign in.' : password.data.password_changed_at ? ` · ${formatWhen(password.data.password_changed_at)}` : ''}</p>
+      )}
       <div className="admin-actions">
         <ConfirmButton confirmLabel="Tap again to reset" onConfirm={handleReset}>Reset password</ConfirmButton>
         {user.is_active

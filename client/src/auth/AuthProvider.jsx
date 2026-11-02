@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { fetchPasswordPending } from '../lib/accountApi.js'
 import { fetchProfile, sessionAal, supabase, supabaseConfigError } from '../lib/supabase.js'
 import { AuthContext } from './authContext.js'
 
@@ -8,7 +9,7 @@ const SESSION_TIMEOUT_MS = 8000
 export default function AuthProvider({ children }) {
   // undefined until Supabase has restored (or ruled out) a stored session
   const [session, setSession] = useState(supabase ? undefined : null)
-  const [loadedProfile, setLoadedProfile] = useState({ userId: null, profile: null })
+  const [loadedProfile, setLoadedProfile] = useState({ userId: null, profile: null, passwordPending: false })
 
   useEffect(() => {
     if (!supabase) return
@@ -27,16 +28,16 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     if (!userId) return
     let cancelled = false
-    fetchProfile(userId)
-      .catch(() => null)
-      .then((profile) => {
-        if (!cancelled) setLoadedProfile({ userId, profile })
+    Promise.all([fetchProfile(userId).catch(() => null), fetchPasswordPending(userId)])
+      .then(([profile, passwordPending]) => {
+        if (!cancelled) setLoadedProfile({ userId, profile, passwordPending })
       })
     return () => { cancelled = true }
   }, [userId])
 
   const profile = userId && loadedProfile.userId === userId ? loadedProfile.profile : null
   const user = profile?.is_active ? profile : null
+  const passwordPending = Boolean(user) && loadedProfile.passwordPending
   const loading = session === undefined || (Boolean(userId) && loadedProfile.userId !== userId)
 
   // 'local' ends only this device's session, so Exit on a shared phone doesn't log the user out everywhere.
@@ -44,9 +45,11 @@ export default function AuthProvider({ children }) {
     if (supabase) await supabase.auth.signOut({ scope: 'local' })
   }, [])
 
+  const markPasswordChanged = useCallback(() => setLoadedProfile((current) => ({ ...current, passwordPending: false })), [])
+
   const value = useMemo(
-    () => ({ session, user, role: user?.role ?? null, aal: sessionAal(session), loading, signOut, configError: supabaseConfigError }),
-    [session, user, loading, signOut],
+    () => ({ session, user, role: user?.role ?? null, aal: sessionAal(session), loading, passwordPending, markPasswordChanged, signOut, configError: supabaseConfigError }),
+    [session, user, loading, passwordPending, markPasswordChanged, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

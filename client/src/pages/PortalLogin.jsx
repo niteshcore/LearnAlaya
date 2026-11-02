@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
 import { signInToPortal } from '../auth/signInToPortal.js'
@@ -6,9 +6,18 @@ import Badge from '../components/ui/Badge.jsx'
 import Brand from '../components/ui/Brand.jsx'
 import Button from '../components/ui/Button.jsx'
 import { loginPaths, portalConfig } from '../data/portalConfig.js'
+import { IDLE_FLAG } from '../hooks/useIdleSignOut.js'
 import { contactEmail } from '../data/siteContent.js'
 
 const AdminMfaStep = lazy(() => import('../auth/AdminMfaStep.jsx'))
+
+function readIdleFlag() {
+  try {
+    return sessionStorage.getItem(IDLE_FLAG) === '1'
+  } catch {
+    return false
+  }
+}
 
 export default function PortalLogin({ role }) {
   const config = portalConfig[role]
@@ -17,6 +26,10 @@ export default function PortalLogin({ role }) {
   const [userId, setUserId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [failure, setFailure] = useState(null)
+  const [signedOutIdle] = useState(readIdleFlag)
+  useEffect(() => {
+    try { sessionStorage.removeItem(IDLE_FLAG) } catch { /* nothing stored */ }
+  }, [])
   const { role: currentRole, aal, loading, configError, signOut } = useAuth()
   // An admin with only a password session still has to pass the one-time code.
   const needsMfa = role === 'admin' && currentRole === 'admin' && aal !== 'aal2'
@@ -63,6 +76,9 @@ export default function PortalLogin({ role }) {
                 Sign-in is temporarily unavailable. Please try again later or contact the admin.
                 {import.meta.env.DEV && <><br /><small>{configError}</small></>}
               </p>
+            )}
+            {signedOutIdle && !failure && (
+              <p className="login-error login-error-top" role="status">You were signed out because nobody used the dashboard for a while. Sign in again to continue.</p>
             )}
             {needsMfa ? (
               <Suspense fallback={<p className="mfa-status" role="status">Preparing two-step verification…</p>}>

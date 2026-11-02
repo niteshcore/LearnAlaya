@@ -1,0 +1,9 @@
+# Security headers for Netlify / Cloudflare Pages (other hosts ignore this file; set the same headers there).
+# The Content-Security-Policy itself is a <meta> tag added at build time (vite.config.js).
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains

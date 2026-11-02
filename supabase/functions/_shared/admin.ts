@@ -85,14 +85,25 @@ function tokenAal(token: string) {
   }
 }
 
-// Confirms the caller is an active admin who passed two-step verification, using their own JWT so RLS applies to the lookup.
-// Returns the caller's id and a service-role client for the privileged work.
-export async function requireAdmin(req: Request) {
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) throw new HttpError(401, 'Sign in as an admin first.')
+function serviceClient() {
+  return createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
-  const url = env('SUPABASE_URL')
-  const caller = createClient(url, env('SUPABASE_ANON_KEY'), {
+export function anonClient() {
+  return createClient(env('SUPABASE_URL'), env('SUPABASE_ANON_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+// Confirms the caller is a signed-in, active user, using their own JWT so RLS applies to the profile lookup.
+// Returns the caller's user, profile and token, and a service-role client for the privileged work.
+export async function requireUser(req: Request) {
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) throw new HttpError(401, 'Sign in first.')
+
+  const caller = createClient(env('SUPABASE_URL'), env('SUPABASE_ANON_KEY'), {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -100,21 +111,38 @@ export async function requireAdmin(req: Request) {
   const token = authHeader.slice('Bearer '.length)
   const { data: userData, error: userError } = await caller.auth.getUser(token)
   if (userError || !userData.user) throw new HttpError(401, 'Your session has expired. Sign in again.')
-  // getUser has verified the token, so its claims can be trusted here.
-  if (tokenAal(token) !== 'aal2') throw new HttpError(403, 'Admin actions need two-step verification. Sign out and sign in again with your code.')
 
   const { data: profile, error: profileError } = await caller
     .from('profiles')
-    .select('role, is_active')
+    .select('role, is_active, login_id')
     .eq('id', userData.user.id)
     .maybeSingle()
   if (profileError) throw profileError
-  if (profile?.role !== 'admin' || !profile.is_active) throw new HttpError(403, 'Only admins can do this.')
+  if (!profile?.is_active) throw new HttpError(403, 'This account isn’t active. Please contact the admin.')
 
-  const admin = createClient(url, env('SUPABASE_SERVICE_ROLE_KEY'), {
-    auth: { persistSession: false, autoRefreshToken: false },
+  // getUser has verified the token, so its claims can be trusted here.
+  return { user: userData.user, profile, token, aal: tokenAal(token), admin: serviceClient() }
+}
+
+// Confirms the caller is an active admin who passed two-step verification.
+// Returns the caller's id and a service-role client for the privileged work.
+export async function requireAdmin(req: Request) {
+  const { user, profile, aal, admin } = await requireUser(req).catch((error) => {
+    throw error instanceof HttpError && error.status === 401 ? new HttpError(401, 'Sign in as an admin first.') : error
   })
-  return { adminId: userData.user.id, admin }
+  if (aal !== 'aal2') throw new HttpError(403, 'Admin actions need two-step verification. Sign out and sign in again with your code.')
+  if (profile.role !== 'admin') throw new HttpError(403, 'Only admins can do this.')
+  return { adminId: user.id, admin }
+}
+
+// The person must replace the password an admin has seen before the database lets them read anything (0007).
+// Before 0007 has been run the table doesn't exist yet; creating and resetting accounts keeps working.
+export async function requirePasswordChange(admin: SupabaseClient, userId: string) {
+  const { error } = await admin
+    .from('account_security')
+    .upsert({ user_id: userId, must_change_password: true, updated_at: new Date().toISOString() })
+  if (error && (error.code === 'PGRST205' || error.code === '42P01')) console.warn('account_security missing: run 0007_account_security.sql')
+  else if (error) throw error
 }
 
 export async function logActivity(admin: SupabaseClient, actorId: string, action: string, entityId: string, meta: Record<string, unknown> = {}) {

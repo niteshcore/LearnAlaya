@@ -9,6 +9,7 @@ function describe({ action, meta = {} }) {
   switch (action) {
     case 'user.created': return `Created ${meta.role ?? 'user'} ${who}`
     case 'user.password_reset': return `Reset the password for ${who}`
+    case 'user.password_changed': return 'Changed their own password'
     case 'user.deactivated': return `Deactivated ${who}`
     case 'user.activated': return `Reactivated ${who}`
     case 'user.updated': return `Updated details for ${who}`

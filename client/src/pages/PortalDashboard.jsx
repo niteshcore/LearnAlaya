@@ -1,9 +1,12 @@
 import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
+import useIdleSignOut, { IDLE_FLAG, IDLE_MINUTES } from '../hooks/useIdleSignOut.js'
 import Brand from '../components/ui/Brand.jsx'
 import NotificationBell from '../components/portal/NotificationBell.jsx'
-import { portalConfig } from '../data/portalConfig.js'
+import { loginPaths, portalConfig } from '../data/portalConfig.js'
+
+const AccountModal = lazy(() => import('../components/portal/AccountModal.jsx'))
 
 const AdminWorkspace = lazy(() => import('../components/admin/AdminWorkspace.jsx'))
 const TeacherWorkspace = lazy(() => import('../components/teacher/TeacherWorkspace.jsx'))
@@ -24,7 +27,8 @@ function DateChip() {
 export default function PortalDashboard({ role }) {
   const config = portalConfig[role]
   const [activeSection, setActiveSection] = useState(config.sections[0])
-  const { user, signOut } = useAuth()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const { session, user, signOut } = useAuth()
   const navigate = useNavigate()
   const Workspace = workspaces[role]
 
@@ -33,13 +37,20 @@ export default function PortalDashboard({ role }) {
     await signOut()
   }
 
+  // Signing out sends RequireRole to the login page, which reads the flag to explain why.
+  const idleSecondsLeft = useIdleSignOut(IDLE_MINUTES[role], session?.user.last_sign_in_at, async () => {
+    try { sessionStorage.setItem(IDLE_FLAG, '1') } catch { /* the login page just won't explain */ }
+    await signOut()
+    navigate(loginPaths[role], { replace: true })
+  })
+
   return (
     <div className={`dashboard-page ${config.tone}`}>
       <header className="dashboard-header">
         <Brand to="/" tagline={config.label} />
         <div className="dashboard-user">
           {role !== 'admin' && <NotificationBell userId={user.id} sections={config.sections} onNavigate={setActiveSection} />}
-          <span className="user-avatar" aria-hidden="true">{user.full_name.trim()[0]?.toUpperCase() ?? config.role[0]}</span>
+          <button type="button" className="user-avatar" onClick={() => setAccountOpen(true)} aria-label="Your account and password" title="Your account">{user.full_name.trim()[0]?.toUpperCase() ?? config.role[0]}</button>
           <span><strong>Welcome, {user.full_name}</strong><small>{config.role} account · {user.login_id}</small></span>
           <button className="logout-link" type="button" onClick={handleExit}>Exit ↗</button>
         </div>
@@ -66,6 +77,18 @@ export default function PortalDashboard({ role }) {
           </Suspense>
         </section>
       </main>
+      {accountOpen && (
+        <Suspense fallback={null}>
+          <AccountModal user={user} onClose={() => setAccountOpen(false)} onSignedOut={() => navigate('/', { replace: true })} />
+        </Suspense>
+      )}
+      {idleSecondsLeft !== null && (
+        <div className="idle-warning" role="alert">
+          <p>No activity for a while. For your safety you’ll be signed out in <strong>{idleSecondsLeft}s</strong>.</p>
+          {/* Any tap or key press counts as activity, so the button needs no handler of its own. */}
+          <button type="button" className="button">Stay signed in</button>
+        </div>
+      )}
     </div>
   )
 }

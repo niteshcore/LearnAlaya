@@ -101,3 +101,12 @@
   .note-actions { flex-basis: 100%; justify-content: start; }
   .leave-actions { flex-basis: 100%; justify-content: start; }
 }
+
+/* Account window */
+.account-modal { display:grid; gap:22px; }
+.account-modal h3 { font-size:17px; letter-spacing:-.03em; margin-bottom:10px; }
+.account-modal section { display:grid; gap:10px; padding-top:18px; border-top:1px solid var(--line); }
+.account-modal .admin-btn-danger { justify-self:start; }
+.account-facts { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+.account-facts dt { font:11px var(--mono); text-transform:uppercase; color:#657069; }
+.account-facts dd { margin:4px 0 0; font-weight:600; overflow-wrap:anywhere; }
