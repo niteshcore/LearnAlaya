@@ -1,0 +1,2 @@
+# Single-page app: every route (/login/student, /admin, …) is served by index.html and React Router takes over.
+/*  /index.html  200
