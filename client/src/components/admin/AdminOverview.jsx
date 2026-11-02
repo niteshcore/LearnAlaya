@@ -24,6 +24,12 @@ export default function AdminOverview({ onNavigate }) {
         ))}
       </div>
       {error && <LoadState error={`Couldn’t load the counts. ${error}`} onRetry={reload} />}
+      {data?.pendingLeave > 0 && (
+        <p className="admin-notice admin-notice-warning admin-leave-alert">
+          {data.pendingLeave} leave request{data.pendingLeave === 1 ? ' is' : 's are'} waiting for a decision.
+          <button type="button" className="admin-link" onClick={() => onNavigate('Leave')}>Review ↗</button>
+        </p>
+      )}
       <div className="admin-shortcuts">
         <button type="button" className="admin-btn admin-btn-primary" onClick={() => onNavigate('Users')}>Add a user</button>
         <button type="button" className="admin-btn" onClick={() => onNavigate('Classes & subjects')}>Set up classes</button>

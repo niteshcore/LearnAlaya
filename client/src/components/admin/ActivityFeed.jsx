@@ -35,6 +35,8 @@ function describe({ action, meta = {} }) {
     case 'fee.deleted': return `Deleted fee ${meta.title} for ${who}`
     case 'announcement.posted': return `Posted announcement “${meta.title}” to ${meta.audience}${meta.class ? ` · ${meta.class}` : ''}`
     case 'announcement.deleted': return `Deleted announcement “${meta.title}”`
+    case 'leave.approved': return `Approved leave for ${who} (${meta.from} to ${meta.to})${meta.cancelled ? ` · cancelled ${meta.cancelled} class${meta.cancelled === 1 ? '' : 'es'}` : ''}`
+    case 'leave.rejected': return `Rejected leave for ${who} (${meta.from} to ${meta.to})`
     default: return action
   }
 }

@@ -3,52 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
 import Brand from '../components/ui/Brand.jsx'
 import NotificationBell from '../components/portal/NotificationBell.jsx'
-import Button from '../components/ui/Button.jsx'
 import { portalConfig } from '../data/portalConfig.js'
 
 const AdminWorkspace = lazy(() => import('../components/admin/AdminWorkspace.jsx'))
 const TeacherWorkspace = lazy(() => import('../components/teacher/TeacherWorkspace.jsx'))
 const ParentWorkspace = lazy(() => import('../components/parent/ParentWorkspace.jsx'))
-const AnnouncementsFeed = lazy(() => import('../components/portal/AnnouncementsFeed.jsx'))
-const workspaces = { admin: AdminWorkspace, teacher: TeacherWorkspace, parent: ParentWorkspace }
-
-const recentActivity = ['Concept building session', 'Weekly assessment', 'Chapter 5 notes']
-
-// Placeholder content until each role's real features are built.
-function DemoContent({ config, activeSection }) {
-  return (
-    <>
-      <p className="demo-banner" role="note"><b>Preview</b> These numbers are sample data. Your real {config.role.toLowerCase()} details will show here soon.</p>
-      <div className="dashboard-stats">
-        {config.stats.map(([value, label]) => <article key={label}><strong>{value}</strong><span>{label}</span></article>)}
-      </div>
-      <div className="dashboard-panels">
-        <article className="dashboard-panel panel-primary">
-          <div className="panel-heading"><span>✦</span><p>Next up</p><b>View all ↗</b></div>
-          <h2>{config.nextUp.title}</h2>
-          <p>{config.nextUp.detail}</p>
-          <div className="progress-line"><i /><span>{config.nextUp.progress}</span></div>
-        </article>
-        <article className="dashboard-panel panel-secondary">
-          <div className="panel-heading"><span>◎</span><p>Quick action</p></div>
-          <h2>{config.quickAction}</h2>
-          <Button>Open {activeSection}</Button>
-        </article>
-      </div>
-      <div className="dashboard-table">
-        <div className="panel-heading"><p>Recent activity</p><b>See all ↗</b></div>
-        {recentActivity.map((item, index) => (
-          <div className="activity-row" key={item}>
-            <span className="activity-number">0{index + 1}</span>
-            <strong>{item}</strong>
-            <small>{index === 0 ? 'Today, 10:30 AM' : 'Yesterday'}</small>
-            <span className="activity-status">Done</span>
-          </div>
-        ))}
-      </div>
-    </>
-  )
-}
+const StudentWorkspace = lazy(() => import('../components/student/StudentWorkspace.jsx'))
+const workspaces = { admin: AdminWorkspace, teacher: TeacherWorkspace, parent: ParentWorkspace, student: StudentWorkspace }
 
 function DateChip() {
   const [today] = useState(() => new Date())
@@ -100,19 +61,9 @@ export default function PortalDashboard({ role }) {
             <div><p className="section-label">Today / {activeSection}</p><h1>{config.title}</h1><p>{config.description}</p></div>
             <DateChip />
           </div>
-          {Workspace
-            ? (
-              <Suspense fallback={<p className="auth-loading-inline" role="status">Loading your workspace…</p>}>
-                <Workspace section={activeSection} onNavigate={setActiveSection} />
-              </Suspense>
-            )
-            : activeSection === 'Announcements'
-              ? (
-                <Suspense fallback={<p className="auth-loading-inline" role="status">Loading announcements…</p>}>
-                  <div className="admin-workspace"><AnnouncementsFeed /></div>
-                </Suspense>
-              )
-              : <DemoContent config={config} activeSection={activeSection} />}
+          <Suspense fallback={<p className="auth-loading-inline" role="status">Loading your workspace…</p>}>
+            <Workspace section={activeSection} onNavigate={setActiveSection} />
+          </Suspense>
         </section>
       </main>
     </div>

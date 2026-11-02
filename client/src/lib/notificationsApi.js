@@ -3,7 +3,7 @@ import { classLabel, run } from './query.js'
 import { supabase } from './supabase.js'
 
 // In-app notifications for whoever is signed in. They are written by database triggers
-// (absences, class changes, announcements) and by the admin (fee reminders).
+// (absences, class changes, announcements, results, notes, leave) and by the admin (fee reminders).
 // Always filtered by recipient: an admin's RLS would otherwise return everyone's.
 
 const LIMIT = 30
@@ -28,12 +28,15 @@ async function lookups(rows) {
   }
 }
 
+const leaveDates = ({ from_date: from, to_date: to }) => (from ? (from === to || !to ? formatDate(from) : `${formatDate(from)} – ${formatDate(to)}`) : '')
+
 // title + detail for the bell, and the dashboard section that shows more.
-function describe({ type, payload = {} }, { studentName, classSubjectLabel }) {
-  const who = studentName.get(payload.student_id)
+function describe({ type, payload = {} }, { studentName, classSubjectLabel, self }) {
+  // A student reading about themself doesn't need their own name.
+  const who = payload.student_id === self ? null : studentName.get(payload.student_id)
   switch (type) {
     case 'absent':
-      return { title: `${who ?? 'Your child'} was marked absent`, detail: 'Check the attendance for details.', section: 'Attendance' }
+      return { title: `${who ? `${who} was` : payload.student_id === self ? 'You were' : 'Your child was'} marked absent`, detail: 'Check the attendance for details.', section: 'Attendance' }
     case 'class_update': {
       const label = classSubjectLabel.get(payload.class_subject_id) ?? 'A class'
       const when = payload.session_date ? `${formatDate(payload.session_date)}${payload.start_time ? `, ${formatTime(payload.start_time)}` : ''}` : ''
@@ -48,6 +51,20 @@ function describe({ type, payload = {} }, { studentName, classSubjectLabel }) {
       }
     case 'announcement':
       return { title: payload.title ?? 'New announcement', detail: payload.body ?? '', section: 'Announcements' }
+    case 'result':
+      return {
+        title: `${payload.exam ?? 'Exam'} marks are out${who ? ` for ${who}` : ''}`,
+        detail: classSubjectLabel.get(payload.class_subject_id) ?? '',
+        section: 'Results',
+      }
+    case 'note':
+      return { title: `New notes: ${payload.title ?? 'study material'}`, detail: classSubjectLabel.get(payload.class_subject_id) ?? '', section: 'Notes' }
+    case 'leave_request':
+      return { title: `${who ?? 'A student'} asked for leave`, detail: leaveDates(payload), section: 'Leave' }
+    case 'leave_update': {
+      const verdict = payload.status === 'approved' ? 'approved' : 'not approved'
+      return { title: `Leave ${verdict}${who ? ` for ${who}` : ''}`, detail: leaveDates(payload), section: 'Leave' }
+    }
     default:
       return { title: type.replace(/_/g, ' '), detail: '', section: null }
   }
@@ -60,7 +77,7 @@ export async function loadNotifications(userId) {
     .eq('channel', 'in_app')
     .order('created_at', { ascending: false })
     .limit(LIMIT))
-  const names = await lookups(rows)
+  const names = { ...(await lookups(rows)), self: userId }
   return rows.map((row) => ({ ...row, ...describe(row, names) }))
 }
 

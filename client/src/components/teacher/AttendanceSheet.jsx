@@ -3,7 +3,7 @@ import useAction from '../../hooks/useAction.js'
 import useLoad from '../../hooks/useLoad.js'
 import { formatDay, formatTime } from '../../lib/format.js'
 import { byNatural } from '../../lib/query.js'
-import { loadMarks, saveAttendance, sessionLock } from '../../lib/teacherApi.js'
+import { loadMarks, saveAttendance, sessionLock, studentsOnLeave } from '../../lib/teacherApi.js'
 import { ConfirmButton, LoadState, Notice } from '../admin/AdminUi.jsx'
 
 const STATUSES = [
@@ -28,6 +28,7 @@ export default function AttendanceSheet({ session, item, home, onClose, onSaved 
   const [message, setMessage] = useState('')
   const { busy, error, run } = useAction()
   const locked = sessionLock(session, home)
+  const onLeave = studentsOnLeave(home.leaves ?? [], session.session_date)
 
   const savedMarks = saved.data ?? new Map()
   const statusOf = (id) => draft.get(id) ?? savedMarks.get(id) ?? null
@@ -56,7 +57,7 @@ export default function AttendanceSheet({ session, item, home, onClose, onSaved 
     setMessage('')
     setDraft((previous) => {
       const next = new Map(previous)
-      for (const student of roster) if (!statusOf(student.id)) next.set(student.id, 'present')
+      for (const student of roster) if (!statusOf(student.id)) next.set(student.id, onLeave.has(student.id) ? 'leave' : 'present')
       return next
     })
   }
@@ -111,7 +112,7 @@ export default function AttendanceSheet({ session, item, home, onClose, onSaved 
                     <li key={student.id} className={current ? `is-${current}` : 'is-unmarked'}>
                       <div className="attendance-student">
                         <span className="attendance-roll">{student.roll_no ?? '—'}</span>
-                        <span><strong>{student.full_name}</strong><small>{student.login_id}{changes.has(student.id) ? ' · unsaved' : ''}</small></span>
+                        <span><strong>{student.full_name}</strong><small>{student.login_id}{onLeave.has(student.id) ? ' · approved leave' : ''}{changes.has(student.id) ? ' · unsaved' : ''}</small></span>
                       </div>
                       <div className="attendance-choices" role="radiogroup" aria-label={`Attendance for ${student.full_name}`}>
                         {STATUSES.map(([status, short, label]) => (

@@ -61,10 +61,10 @@ export async function loadTeacherHome(teacherId) {
   ])
   const settings = { ...DEFAULT_SETTINGS, ...settingsRows[0] }
   const today = dateInZone(settings.timezone)
-  if (!classSubjects.length) return { settings, today, teaching: [], people: new Map(), sessions: [] }
+  if (!classSubjects.length) return { settings, today, teaching: [], people: new Map(), sessions: [], leaves: [] }
 
   const csIds = classSubjects.map((cs) => cs.id)
-  const [classes, subjects, enrolment, students, profiles, sessions] = await Promise.all([
+  const [classes, subjects, enrolment, students, profiles, sessions, leaves] = await Promise.all([
     run(supabase.from('classes').select('id, name, section, academic_year, is_active').in('id', [...new Set(classSubjects.map((cs) => cs.class_id))])),
     run(supabase.from('subjects').select('id, name, color').in('id', [...new Set(classSubjects.map((cs) => cs.subject_id))])),
     run(supabase.from('student_subjects').select('student_id, class_subject_id').in('class_subject_id', csIds).limit(10000)),
@@ -77,6 +77,14 @@ export async function loadTeacherHome(teacherId) {
       .lte('session_date', addDays(today, UPCOMING_DAYS))
       .order('session_date', { ascending: false })
       .order('start_time')),
+    // Approved student leave around the window, so registers can pre-fill 'On leave'.
+    run(supabase.from('leave_requests')
+      .select('student_id, from_date, to_date')
+      .eq('status', 'approved')
+      .not('student_id', 'is', null)
+      .lte('from_date', addDays(today, UPCOMING_DAYS))
+      .gte('to_date', addDays(today, -RECENT_DAYS))
+      .limit(2000)),
   ])
 
   const studentRows = new Map(students.map((row) => [row.profile_id, row]))
@@ -111,7 +119,12 @@ export async function loadTeacherHome(teacherId) {
       }
     })
 
-  return { settings, today, teaching, people, sessions: withCounts }
+  return { settings, today, teaching, people, sessions: withCounts, leaves }
+}
+
+// Students with approved leave covering that date.
+export function studentsOnLeave(leaves, date) {
+  return new Set(leaves.filter((l) => l.from_date <= date && l.to_date >= date).map((l) => l.student_id))
 }
 
 export async function loadMarks(sessionId) {

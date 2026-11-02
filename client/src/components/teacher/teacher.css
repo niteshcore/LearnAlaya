@@ -65,6 +65,22 @@
 .attendance-save { position: sticky; bottom: 0; z-index: 2; display: grid; gap: 10px; justify-items: start; padding: 14px 0; background: var(--cream); border-top: 1.5px solid var(--ink); }
 .attendance-save .admin-notice { justify-self: stretch; }
 
+/* ---------- Results ---------- */
+.exam-list { list-style: none; display: grid; gap: 14px; }
+.exam-row { display: grid; gap: 10px; padding: 14px 16px; border: 1.5px solid var(--ink); background: #fffdf8; box-shadow: 3px 3px 0 var(--ink); }
+.exam-row-head { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 10px; }
+.exam-subjects { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.exam-subject { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 6px 8px 6px 12px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); font: 600 13px var(--display); cursor: pointer; }
+.exam-subject:hover { background: var(--yellow); }
+.exam-subject:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.marks-sheet > .admin-short { max-width: 180px; }
+.marks-list li.is-error { background: #fbe0d8; }
+.marks-list li.is-error small { color: #a3321c; }
+.marks-input { display: flex; align-items: center; gap: 6px; flex: none; }
+.marks-input input { width: 76px; min-height: 42px; padding: 8px 10px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); font: 600 16px var(--mono); text-align: right; }
+.marks-input input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 1px; }
+.marks-input small { font: 11px var(--mono); color: #657069; min-width: 40px; }
+
 @media (max-width: 760px) {
   .teacher-recent-row { grid-template-columns: 28px 1fr 70px; }
   .session-list li { flex-wrap: wrap; }

@@ -1,8 +1,10 @@
 import { addDays } from '../../lib/dates.js'
 import { FEE_STATES, isOpen } from '../../lib/fees.js'
 import { formatDate, formatMoney, formatTime } from '../../lib/format.js'
-import { ATTENDANCE_DAYS, TIMETABLE_DAYS } from '../../lib/parentApi.js'
+import { ATTENDANCE_DAYS, TIMETABLE_DAYS } from '../../lib/familyApi.js'
 import { scheduleState } from '../../lib/teacherApi.js'
+
+const formatMark = (value) => Number(value.toFixed(2)).toString()
 
 const longDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
 const ATTENDANCE_STATES = {
@@ -16,7 +18,7 @@ export function ParentTimetable({ child, home }) {
   const days = [...new Set(child.upcoming.map((s) => s.session_date))]
   return (
     <section className="admin-block">
-      <div className="admin-block-head"><p className="section-label">Next {TIMETABLE_DAYS} days</p><h2>{child.full_name.split(' ')[0]}’s classes</h2></div>
+      <div className="admin-block-head"><p className="section-label">Next {TIMETABLE_DAYS} days</p><h2>{child.isSelf ? 'Your classes' : `${child.full_name.split(' ')[0]}’s classes`}</h2></div>
       {days.length === 0 && <p className="admin-empty">No classes in the next week yet. The timetable shows up once the institute sets it.</p>}
       {days.map((day) => (
         <div className="timetable-day" key={day}>
@@ -128,6 +130,38 @@ export function ParentFees({ child }) {
           {closed.some((fee) => fee.state === 'waived') && <p className="admin-hint">Waived: {closed.filter((fee) => fee.state === 'waived').map((fee) => fee.title).join(', ')}</p>}
         </section>
       )}
+    </div>
+  )
+}
+
+export function ChildResults({ child }) {
+  const [latest] = child.results
+  return (
+    <div className="admin-stack">
+      <section className="admin-block">
+        <div className="admin-block-head"><p className="section-label">Results</p><h2>{latest ? `${latest.name}${latest.pct != null ? ` · ${latest.pct}%` : ''}` : 'No results yet'}</h2></div>
+        {!latest && <p className="admin-empty">Marks show up here once a teacher publishes them.</p>}
+      </section>
+      {child.results.map((exam) => (
+        <section className="admin-block" key={exam.id} aria-label={exam.name}>
+          <div className="admin-block-head result-head">
+            <div><p className="section-label">{exam.exam_date ? formatDate(exam.exam_date, { year: true }) : 'Exam'}</p><h3>{exam.name}</h3></div>
+            {exam.pct != null && <strong className="result-total">{formatMark(exam.total)} / {formatMark(exam.max)} <small>{exam.pct}%</small></strong>}
+          </div>
+          <ul className="session-list result-list">
+            {exam.rows.map((row) => {
+              const pct = row.marks == null ? null : Math.round((row.marks / row.max) * 100)
+              return (
+                <li key={row.id}>
+                  <div className="session-main"><strong>{row.subject}</strong><small>{row.marks == null ? 'Absent' : `${formatMark(row.marks)} out of ${formatMark(row.max)}`}</small></div>
+                  <span className="result-bar" aria-hidden="true"><i style={{ width: `${pct ?? 0}%` }} /></span>
+                  <span className={`register-chip register-${pct == null ? 'muted' : pct >= 75 ? 'done' : pct >= 40 ? 'partial' : 'pending'}`}>{pct == null ? 'AB' : `${pct}%`}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }

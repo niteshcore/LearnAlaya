@@ -39,13 +39,14 @@ async function invokeFunction(name, body) {
 
 export async function getOverviewCounts() {
   const countRole = (role) => run(supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', role).eq('is_active', true))
-  const [students, teachers, parents, classes] = await Promise.all([
+  const [students, teachers, parents, classes, pendingLeave] = await Promise.all([
     countRole('student'),
     countRole('teacher'),
     countRole('parent'),
     run(supabase.from('classes').select('id', { count: 'exact', head: true }).eq('is_active', true)),
+    run(supabase.from('leave_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')),
   ])
-  return { students, teachers, parents, classes }
+  return { students, teachers, parents, classes, pendingLeave }
 }
 
 export async function listActivity(limit) {

@@ -4,13 +4,14 @@ import useLoad from '../../hooks/useLoad.js'
 import { timeInZone } from '../../lib/dates.js'
 import { isOpen } from '../../lib/fees.js'
 import { formatDate, formatMoney, formatTime } from '../../lib/format.js'
-import { loadParentHome } from '../../lib/parentApi.js'
+import { loadParentHome } from '../../lib/familyApi.js'
 import { LoadState } from '../admin/AdminUi.jsx'
 import '../admin/admin.css'
 import AnnouncementsFeed from '../portal/AnnouncementsFeed.jsx'
 import '../teacher/teacher.css'
 import './parent.css'
-import { ParentAttendance, ParentFees, ParentTimetable } from './ParentSections.jsx'
+import LeaveRequests from '../portal/LeaveRequests.jsx'
+import { ChildResults, ParentAttendance, ParentFees, ParentTimetable } from './ParentSections.jsx'
 
 function ParentOverview({ child, home, onNavigate }) {
   const live = child.upcoming.filter((s) => s.status !== 'cancelled' && s.status !== 'rescheduled')
@@ -97,13 +98,15 @@ export default function ParentWorkspace({ section, onNavigate }) {
       {!child && section !== 'Announcements' && (
         <section className="admin-block">
           <div className="admin-block-head"><p className="section-label">Getting started</p><h2>No child linked yet</h2></div>
-          <p className="admin-hint">Ask the institute office to link your account to your child. Their timetable, attendance and fees will show up here.</p>
+          <p className="admin-hint">Ask the institute office to link your account to your child. Their timetable, attendance, results and fees will show up here.</p>
         </section>
       )}
       {child && section === 'Overview' && <ParentOverview child={child} home={home.data} onNavigate={onNavigate} />}
       {child && section === 'Timetable' && <ParentTimetable child={child} home={home.data} />}
       {child && section === 'Attendance' && <ParentAttendance child={child} home={home.data} />}
+      {child && section === 'Results' && <ChildResults child={child} />}
       {child && section === 'Fees' && <ParentFees child={child} />}
+      {child && section === 'Leave' && <LeaveRequests child={child} requesterId={user.id} today={home.data.today} onChanged={home.reload} />}
       {section === 'Announcements' && (
         <section className="admin-block">
           <div className="admin-block-head"><p className="section-label">From the institute</p><h2>Announcements</h2></div>

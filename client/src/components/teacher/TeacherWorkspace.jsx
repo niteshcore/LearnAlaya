@@ -4,16 +4,16 @@ import useLoad from '../../hooks/useLoad.js'
 import { loadTeacherHome } from '../../lib/teacherApi.js'
 import { LoadState } from '../admin/AdminUi.jsx'
 import '../admin/admin.css'
+import AnnouncementsFeed from '../portal/AnnouncementsFeed.jsx'
+import ChatPanel from '../portal/ChatPanel.jsx'
+import '../portal/portal.css'
 import AttendancePanel from './AttendancePanel.jsx'
+import LeavePanel from './LeavePanel.jsx'
+import NotesPanel from './NotesPanel.jsx'
+import ResultsPanel from './ResultsPanel.jsx'
 import TeacherOverview from './TeacherOverview.jsx'
 import TeacherTimetable from './TeacherTimetable.jsx'
-import AnnouncementsFeed from '../portal/AnnouncementsFeed.jsx'
 import './teacher.css'
-
-const comingNext = {
-  'Publish results': 'Enter exam marks and publish them to students and parents.',
-  'Upload notes': 'Share notes and files with the classes you teach.',
-}
 
 export default function TeacherWorkspace({ section, onNavigate }) {
   const { user } = useAuth()
@@ -49,13 +49,10 @@ export default function TeacherWorkspace({ section, onNavigate }) {
       <div hidden={section !== 'Attendance'}>
         <AttendancePanel home={home.data} reload={home.reload} openSession={openSession} onOpen={setOpenSession} />
       </div>
-      {comingNext[section] && (
-        <section className="admin-block">
-          <div className="admin-block-head"><p className="section-label">Coming next</p><h2>{section}</h2></div>
-          <p className="admin-hint">{comingNext[section]} This part is being built — attendance is ready to use now.</p>
-          <div><button type="button" className="admin-btn" onClick={() => onNavigate('Attendance')}>Go to attendance</button></div>
-        </section>
-      )}
+      {section === 'Results' && <ResultsPanel home={home.data} />}
+      {section === 'Notes' && <NotesPanel home={home.data} />}
+      {section === 'Class chat' && <ChatPanel userId={user.id} />}
+      {section === 'Leave' && <LeavePanel home={home.data} onChanged={home.reload} />}
     </div>
   )
 }
